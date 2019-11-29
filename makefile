@@ -1,6 +1,6 @@
 CPP=gcc
 CFLAGS=-O3
-LDFLAGS=-lSDL -lSDLmain -lSDL_mixer -lSDL_image -lSDL_ttf
+LDFLAGS=-Wall -Werror -lSDL -lSDLmain -lSDL_mixer -lSDL_image -lSDL_ttf
 EXEC=Yote
 
 all: ${EXEC}

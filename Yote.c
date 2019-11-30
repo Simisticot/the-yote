@@ -37,8 +37,34 @@ BOX plateau[6][5];
 //Modèle
 void init_plateau();
 COUL premier_joueur();
+void placer_pion(NUMBOX position);
+void retirer_pion(NUMBOX position);
+void deplacer_pion(NUMBOX depart, NUMBOX destination);
+
+//Vue
+void affiche_plateau_debug();
 
 int main(int argc, char *argv[]){
+	init_plateau();
+
+	NUMBOX placement;
+	placement.c = 4;
+	placement.l = 4;
+
+	affiche_plateau_debug();
+	placer_pion(placement);
+	affiche_plateau_debug();
+
+	NUMBOX destination;
+	destination.c = 3;
+	destination.l = 3;
+
+	deplacer_pion(placement, destination);
+	affiche_plateau_debug();
+
+	retirer_pion(destination);
+	affiche_plateau_debug();
+
     return 0;
 }
 
@@ -66,4 +92,41 @@ COUL premier_joueur(){
 	}else{
 		return NOIR;
 	}
+}
+
+void placer_pion(NUMBOX position){
+	plateau[position.l][position.c].typeP = PION;
+}
+
+void deplacer_pion(NUMBOX depart, NUMBOX destination){
+	if (plateau[depart.l][depart.c].typeP == PION)
+	{
+		plateau[depart.l][depart.c].typeP = VIDE;
+		plateau[destination.l][destination.c].typeP = PION;
+	}
+}
+
+void retirer_pion(NUMBOX position){
+	plateau[position.l][position.c].typeP = VIDE;
+}
+
+
+//Controlleur
+
+//Vue
+
+void affiche_plateau_debug(){
+
+	int i,j;
+
+	for (i = 0; i < 6; i++)
+	{
+		printf("(");
+		for(j = 0; j < 5; j++){
+			printf(" %d ", plateau[i][j].typeP);
+		}
+
+		printf(")\n");
+	}
+	printf("\n\n");
 }

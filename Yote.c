@@ -8,6 +8,9 @@
 #define HEIGHT 700
 
 void wait_close();
+void draw_rectangle(SDL_Surface*,int,int,int,int,int,int,int);
+void window_name_icon(SDL_Surface*);
+
 
 int main(int argc, char *argv[]){
 
@@ -23,25 +26,18 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "SDL_SetVideoMode error : %s\n", SDL_GetError());
 		exit(1);
 	}
-	SDL_WM_SetIcon(SDL_LoadBMP("Images/Yote.bmp"), NULL);
-	SDL_WM_SetCaption("The Yote", NULL);
 
-	Uint32 backgroundColor = SDL_MapRGB(screen->format, 50, 50, 50);
-	SDL_FillRect(screen, NULL, backgroundColor);
+	window_name_icon(screen);
 
-	SDL_Surface *rectangle = NULL;
-	int largeurRectangle = 100;
-	SDL_Rect position; position.x=(WIDTH/2)-(largeurRectangle/2); position.y=(HEIGHT/2)-(largeurRectangle/2);
-	Uint32 rectangleColor = SDL_MapRGB(screen->format, 255, 255, 255);
-	rectangle = SDL_CreateRGBSurface(SDL_HWSURFACE, 100, 100, 32, 0, 0, 0, 0);
-	SDL_FillRect(rectangle, NULL, rectangleColor);
-	SDL_BlitSurface(rectangle, NULL, screen, &position);
+	draw_rectangle(screen,0,0,WIDTH,HEIGHT,50,50,50); //Fond
+
+	draw_rectangle(screen,300,300,100,100,0,255,0);
 
 	SDL_Flip(screen);
 
 	wait_close();
 
-	SDL_FreeSurface(rectangle);
+	SDL_FreeSurface(screen);
 	SDL_Quit();
 	return 0;
 }
@@ -56,4 +52,29 @@ void wait_close(){
 				continuer = 0;
 		}
 	}
+}
+
+void draw_rectangle(SDL_Surface* screen, int posx, int posy, int width, int height, int red, int green, int blue){//posx et posy le point haut-gauche
+	SDL_Surface *rectangle = NULL;
+	SDL_Rect rectanglePos;
+	Uint32 rectangleColor;
+
+	rectanglePos.x=posx; rectanglePos.y=posy;
+	rectangleColor = SDL_MapRGB(screen->format, red, green, blue);
+	rectangle = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 32, 0, 0, 0, 0);
+	SDL_FillRect(rectangle, NULL, rectangleColor);
+	SDL_BlitSurface(rectangle, NULL, screen, &rectanglePos);
+
+	SDL_FreeSurface(rectangle);
+}
+
+void window_name_icon(SDL_Surface* screen){
+	SDL_Surface *icon = NULL;
+
+	icon = SDL_LoadBMP("Images/Yote.bmp");
+	SDL_WM_SetIcon(icon, NULL);
+
+	SDL_WM_SetCaption("The Yote", NULL);
+
+	SDL_FreeSurface(icon);
 }

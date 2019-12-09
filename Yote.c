@@ -76,8 +76,40 @@ void deplacer_pion(NUMBOX depart, NUMBOX destination);
 
 //Vue
 void affiche_plateau_debug();
+void affiche_plateau(SDL_Surface* screen);
+
+//Contrôlleur
+void wait_esc(SDL_Surface* screen);
 
 int main(int argc, char *argv[]){
+
+	SDL_Surface *screen = NULL;
+	GameEntry gameEntry; //Utilisée pour le Menu, contient les informations necessaires pour lancer le jeu
+
+	//SDL_INIT
+	if(SDL_Init(SDL_INIT_VIDEO) == -1) {
+		fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	//SDL_SETVIDEOMODE
+	screen = SDL_SetVideoMode(WIDTH, HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	if (screen == NULL){
+		fprintf(stderr, "SDL_SetVideoMode error : %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	//SDL_TTF
+	if(TTF_Init() == -1){
+		fprintf(stderr, "TTF_Init error : %s\n", TTF_GetError());
+		exit(1);
+	}
+
+	WindowsNameIcon(screen); //Nom et icone fenêtre
+
+	gameEntry = Menu(screen); //Menu
+
+	printf("Nbrlayer:%d - GameMode:%d - PseudoJ1:%s - PseudoJ2:%s \n",gameEntry.playerNumber,gameEntry.gameMode,gameEntry.pseudoJ1,gameEntry.pseudoJ2); //Affichage terminal
 
 	init_plateau();
 
@@ -98,8 +130,11 @@ int main(int argc, char *argv[]){
 
 	retirer_pion(destination);
 	affiche_plateau_debug();
+	affiche_plateau(screen);
 
-    return 0;
+	wait_esc(screen);
+	
+	return 0;
 }
 
 //Modèle
@@ -147,6 +182,25 @@ void retirer_pion(NUMBOX position){
 
 //Controlleur
 
+void wait_esc(SDL_Surface* screen){
+
+	int esc;
+	esc = 0;
+
+	while(esc == 0){
+		SDL_Event event;
+		SDL_WaitEvent(&event);
+		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
+		{
+			//Free
+			TTF_Quit();
+			SDL_FreeSurface(screen);
+			SDL_Quit();
+			esc = 1;
+		}
+	}
+}
+
 //Vue
 
 void affiche_plateau_debug(){
@@ -165,40 +219,42 @@ void affiche_plateau_debug(){
 	printf("\n\n");
 }
 
-	SDL_Surface *screen = NULL;
-	GameEntry gameEntry; //Utilisée pour le Menu, contient les informations necessaires pour lancer le jeu
+void affiche_plateau(SDL_Surface* screen){
 
-	//SDL_INIT
-	if(SDL_Init(SDL_INIT_VIDEO) == -1) {
-		fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
-		exit(1);
+	int i;
+	int hauteur;
+	int largeur;
+
+
+	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+
+	DrawRectangle(screen,50,50,500,1,255,255,255);
+	DrawRectangle(screen,50,650,500,1,255,255,255);
+	DrawRectangle(screen,550,50,1,600,255,255,255);
+	DrawRectangle(screen,50,50,1,600,255,255,255);
+
+
+	hauteur = 50;
+	largeur = 50;
+	for (i = 0; i < 4; i++){
+		largeur += 100;
+		DrawRectangle(screen,largeur,hauteur,1,600,255,255,255);
+	}
+	largeur = 50;
+	for (i = 0; i < 5; i++){
+		hauteur += 100;
+		DrawRectangle(screen,largeur,hauteur,500,1,255,255,255);
 	}
 
-	//SDL_SETVIDEOMODE
-	screen = SDL_SetVideoMode(WIDTH, HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-	if (screen == NULL){
-		fprintf(stderr, "SDL_SetVideoMode error : %s\n", SDL_GetError());
-		exit(1);
-	}
+	DrawRectangle(screen,600,0,1,HEIGHT,255,255,255);
+	DrawRectangle(screen,600,50,300,1,255,255,255);
+	DrawRectangle(screen,600,250,300,1,255,255,255);
+	DrawRectangle(screen,600,450,300,1,255,255,255);
+	DrawRectangle(screen,600,500,300,1,255,255,255);
 
-	//SDL_TTF
-	if(TTF_Init() == -1){
-		fprintf(stderr, "TTF_Init error : %s\n", TTF_GetError());
-		exit(1);
-	}
 
-	WindowsNameIcon(screen); //Nom et icone fenêtre
 
-	gameEntry = Menu(screen); //Menu
-
-	printf("Nbrlayer:%d - GameMode:%d - PseudoJ1:%s - PseudoJ2:%s \n",gameEntry.playerNumber,gameEntry.gameMode,gameEntry.pseudoJ1,gameEntry.pseudoJ2); //Affichage terminal
-
-	//Free
-	TTF_Quit();
-	SDL_FreeSurface(screen);
-	SDL_Quit();
-
-	return 0;
+	SDL_Flip(screen);
 }
 
 void WindowsNameIcon(SDL_Surface* screen){ //Donne un nom à la fenêtre SDL et définie un icone (32x32 format bmp) au programme
@@ -810,7 +866,7 @@ void DrawTextShaded(SDL_Surface* screen, int posx, int posy, char font[255], int
 	SDL_Rect textePosition;
 
 	police = TTF_OpenFont(font,size);
-	texte = TTF_RenderUTF8_Shaded(police, text, policeColor,bgColor); //Blended ou Solid ou Shaded
+	texte = TTF_RenderUTF8_Shaded(police, text, policeColor, bgColor); //Blended ou Solid ou Shaded
 
 	textePosition.x = posx;
 	textePosition.y = posy;

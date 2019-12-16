@@ -27,7 +27,7 @@ int ScoreRegleCredit(SDL_Surface*,int);
 void LoadCreditText(SDL_Surface*);
 void LoadReglesText(SDL_Surface*,int);
 void LoadScoreText(SDL_Surface*);
-void AddScore(char*);
+void AddScore(char[11],char[11],int,int);
 int Jouer(SDL_Surface*,int,GameEntry*);
 void LoadPlayerText(SDL_Surface*);
 void LoadModeText(SDL_Surface*);
@@ -311,8 +311,8 @@ int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et C
 }
 
 void LoadCreditText(SDL_Surface* screen){ //Affichage Crédits
-	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"crédits",50,50,50);
-	DrawRectangle(screen,380,60,135,2,255,255,255);
+	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Crédits",50,50,50);
+	DrawRectangle(screen,380,60,150,2,255,255,255);
 	DrawTextShaded(screen,180,130,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"Ce jeu a été réalisé pour le projet algorithmique",50,50,50);
 	DrawTextShaded(screen,65,160,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"de première année d'école d'ingénieurs ISTY de Vélizy-Villacoublay.",50,50,50);
 	DrawTextShaded(screen,205,190,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"Ce projet a été dirigé par ABOUDA Dhekra",50,50,50);
@@ -327,8 +327,8 @@ void LoadCreditText(SDL_Surface* screen){ //Affichage Crédits
 
 void LoadReglesText(SDL_Surface* screen, int page){ //Affichage Règles
 	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
-	DrawTextShaded(screen,390,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"règles",50,50,50);
-	DrawRectangle(screen,390,60,120,2,255,255,255);
+	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Règles",50,50,50);
+	DrawRectangle(screen,380,60,135,2,255,255,255);
 
 	if(page==1){
 		DrawTextShaded(screen,20,100,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Le Yoté se joue sur un plateau de 5 cases sur 6 et 24 pions (12 de chaque couleur).",50,50,50);
@@ -378,8 +378,8 @@ void LoadScoreText(SDL_Surface* screen){ //Affichage Score
 
 	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",size);
 
-	DrawTextShaded(screen,390,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"scores",50,50,50);
-	DrawRectangle(screen,390,60,125,2,255,255,255);
+	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Scores",50,50,50);
+	DrawRectangle(screen,380,60,135,2,255,255,255);
 
 	file = fopen("scores.txt","r");
 
@@ -399,10 +399,22 @@ void LoadScoreText(SDL_Surface* screen){ //Affichage Score
 	TTF_CloseFont(police);
 }
 
-void AddScore(char* chaine){
+void AddScore(char pseudoG[11], char pseudoP[11], int scoreG, int scoreP){ //Ajoute une nouvelle ligne à score.txt
 	char c;
-	FILE* file = fopen("scores.txt","r+");
-	FILE* tampon = tmpfile();
+	char chaine[40], scoreText[5];
+
+	strcat(chaine,pseudoG); //Fabrication de la string à écrire
+	strcat(chaine," VS ");
+	strcat(chaine,pseudoP);
+	strcat(chaine," : ");
+	sprintf(scoreText,"%d",scoreG);
+	strcat(chaine,scoreText);
+	strcat(chaine,"-");
+	sprintf(scoreText,"%d",scoreP);
+	strcat(chaine,scoreText);
+
+	FILE* file = fopen("scores.txt","r+");	//score.txt
+	FILE* tampon = tmpfile();				//fichier temporaire, on y colle tout le contenu de score.txt, on ajoute notre string dans score.txt, puis on remet tout le fichier temporaire dans score.txt
 
 	if(!file || !tampon){
 		fprintf(stderr, "Impossible ecrire fichier score\n");

@@ -91,7 +91,30 @@ int main(int argc, char *argv[]){
 	int hauteur;
 	int largeur;
 
-	gameEntry=Menu(screen);
+	//SDL_INIT
+	if(SDL_Init(SDL_INIT_VIDEO) == -1) {
+		fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	//SDL_SETVIDEOMODE
+	screen = SDL_SetVideoMode(WIDTH, HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	if (screen == NULL){
+		fprintf(stderr, "SDL_SetVideoMode error : %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	//SDL_TTF
+	if(TTF_Init() == -1){
+		fprintf(stderr, "TTF_Init error : %s\n", TTF_GetError());
+		exit(1);
+	}
+
+	WindowsNameIcon(screen); //Nom et icone fenêtre
+
+	gameEntry = Menu(screen); //Menu
+
+	printf("Nbrlayer:%d - GameMode:%d - PseudoJ1:%s - PseudoJ2:%s \n",gameEntry.playerNumber,gameEntry.gameMode,gameEntry.pseudoJ1,gameEntry.pseudoJ2); //Affichage terminal
 
 	if(gameEntry.playerNumber==0){
 		printf("Quit\n");

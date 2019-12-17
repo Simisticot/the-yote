@@ -12,37 +12,14 @@
 #define WIDTH 900
 #define HEIGHT 700
 
+//Structures
+
 typedef struct GameEntry { //Structure renvoyée par le Menu pour démarer le jeu
 	int playerNumber; //1 or 2
 	int gameMode; //1:rapide 2:longue
 	char pseudoJ1[11]; //10 caractères + \0
 	char pseudoJ2[11];
 } GameEntry;
-
-void WindowsNameIcon(SDL_Surface*);
-GameEntry Menu(SDL_Surface*);
-void LoadMenuText(SDL_Surface*);
-void SpecialYote(SDL_Surface*);
-int ScoreRegleCredit(SDL_Surface*,int);
-void LoadCreditText(SDL_Surface*);
-void LoadReglesText(SDL_Surface*,int);
-void LoadScoreText(SDL_Surface*);
-void AddScore(char[11],char[11],int,int);
-int Jouer(SDL_Surface*,int,GameEntry*);
-void LoadPlayerText(SDL_Surface*);
-void LoadModeText(SDL_Surface*);
-void LoadPseudoText(SDL_Surface*,int,GameEntry*);
-char GetLetter(int);
-void LoadRecapText(SDL_Surface*,GameEntry*);
-void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int);
-void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int);
-void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]);
-void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int);
-SDL_Color GetPixelColor(SDL_Surface*,int,int);
-char *substr(char*,int,int);
-void lastCharDel(char*);
-
-//Structures 
 
 enum TYPE{
 	VIDE, PION
@@ -72,6 +49,29 @@ BOX plateau[6][5];
 
 //Sommaire des fonctions
 
+void WindowsNameIcon(SDL_Surface*);
+GameEntry Menu(SDL_Surface*);
+void LoadMenuText(SDL_Surface*);
+void SpecialYote(SDL_Surface*);
+int ScoreRegleCredit(SDL_Surface*,int);
+void LoadCreditText(SDL_Surface*);
+void LoadReglesText(SDL_Surface*,int);
+void LoadScoreText(SDL_Surface*);
+void AddScore(char[11],char[11],int,int);
+int Jouer(SDL_Surface*,int,GameEntry*);
+void LoadPlayerText(SDL_Surface*);
+void LoadModeText(SDL_Surface*);
+void LoadPseudoText(SDL_Surface*,int,GameEntry*);
+char GetLetter(int);
+void LoadRecapText(SDL_Surface*,GameEntry*);
+void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int);
+void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int);
+void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]);
+void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int);
+SDL_Color GetPixelColor(SDL_Surface*,int,int);
+char *substr(char*,int,int);
+void lastCharDel(char*);
+
 //Modèle
 void init_plateau();
 COUL premier_joueur();
@@ -91,40 +91,37 @@ int main(int argc, char *argv[]){
 	int hauteur;
 	int largeur;
 
-
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
-
-	DrawRectangle(screen,50,50,500,1,255,255,255);
-	DrawRectangle(screen,50,650,500,1,255,255,255);
-	DrawRectangle(screen,550,50,1,600,255,255,255);
-	DrawRectangle(screen,50,50,1,600,255,255,255);
-
-
-	hauteur = 50;
-	largeur = 50;
-	for (i = 0; i < 4; i++){
-		largeur += 100;
-		DrawRectangle(screen,largeur,hauteur,1,600,255,255,255);
-	}
-	largeur = 50;
-	for (i = 0; i < 5; i++){
-		hauteur += 100;
-		DrawRectangle(screen,largeur,hauteur,500,1,255,255,255);
-	}
-
-	DrawRectangle(screen,600,0,1,HEIGHT,255,255,255);
-	DrawRectangle(screen,600,50,300,1,255,255,255);
-	DrawRectangle(screen,600,250,300,1,255,255,255);
-	DrawRectangle(screen,600,450,300,1,255,255,255);
-	DrawRectangle(screen,600,500,300,1,255,255,255);
-
-
+	gameEntry=Menu(screen);
 
 	if(gameEntry.playerNumber==0){
 		printf("Quit\n");
 		return 0;
 	} else {
-		//Continuer le programme - ouvrir le jeu
+		DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+
+		DrawRectangle(screen,50,50,500,1,255,255,255);
+		DrawRectangle(screen,50,650,500,1,255,255,255);
+		DrawRectangle(screen,550,50,1,600,255,255,255);
+		DrawRectangle(screen,50,50,1,600,255,255,255);
+
+
+		hauteur = 50;
+		largeur = 50;
+		for (i = 0; i < 4; i++){
+			largeur += 100;
+			DrawRectangle(screen,largeur,hauteur,1,600,255,255,255);
+		}
+		largeur = 50;
+		for (i = 0; i < 5; i++){
+			hauteur += 100;
+			DrawRectangle(screen,largeur,hauteur,500,1,255,255,255);
+		}
+
+		DrawRectangle(screen,600,0,1,HEIGHT,255,255,255);
+		DrawRectangle(screen,600,50,300,1,255,255,255);
+		DrawRectangle(screen,600,250,300,1,255,255,255);
+		DrawRectangle(screen,600,450,300,1,255,255,255);
+		DrawRectangle(screen,600,500,300,1,255,255,255);
 		return 0;
 	}
 }

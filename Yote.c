@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "SDL/SDL.h"
-#include "SDL/SDL_ttf.h"
+#include <math.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_ttf.h>
+#include <SDL/SDL_gfxPrimitives.h>
 
 //Taille de la fenêtre SDL
 #define WIDTH 900
@@ -22,8 +25,9 @@ void LoadMenuText(SDL_Surface*);
 void SpecialYote(SDL_Surface*);
 int ScoreRegleCredit(SDL_Surface*,int);
 void LoadCreditText(SDL_Surface*);
-void LoadReglesText(SDL_Surface*);
+void LoadReglesText(SDL_Surface*,int);
 void LoadScoreText(SDL_Surface*);
+void AddScore(char[11],char[11],int,int);
 int Jouer(SDL_Surface*,int,GameEntry*);
 void LoadPlayerText(SDL_Surface*);
 void LoadModeText(SDL_Surface*);
@@ -31,6 +35,7 @@ void LoadPseudoText(SDL_Surface*,int,GameEntry*);
 char GetLetter(int);
 void LoadRecapText(SDL_Surface*,GameEntry*);
 void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int);
+void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int);
 void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]);
 void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int);
 SDL_Color GetPixelColor(SDL_Surface*,int,int);
@@ -76,150 +81,11 @@ void deplacer_pion(NUMBOX depart, NUMBOX destination);
 
 //Vue
 void affiche_plateau_debug();
-void affiche_plateau(SDL_Surface* screen);
-
-//Contrôlleur
-void wait_esc(SDL_Surface* screen);
 
 int main(int argc, char *argv[]){
 
 	SDL_Surface *screen = NULL;
 	GameEntry gameEntry; //Utilisée pour le Menu, contient les informations necessaires pour lancer le jeu
-
-	//SDL_INIT
-	if(SDL_Init(SDL_INIT_VIDEO) == -1) {
-		fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
-		exit(1);
-	}
-
-	//SDL_SETVIDEOMODE
-	screen = SDL_SetVideoMode(WIDTH, HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
-	if (screen == NULL){
-		fprintf(stderr, "SDL_SetVideoMode error : %s\n", SDL_GetError());
-		exit(1);
-	}
-
-	//SDL_TTF
-	if(TTF_Init() == -1){
-		fprintf(stderr, "TTF_Init error : %s\n", TTF_GetError());
-		exit(1);
-	}
-
-	WindowsNameIcon(screen); //Nom et icone fenêtre
-
-	gameEntry = Menu(screen); //Menu
-
-	printf("Nbrlayer:%d - GameMode:%d - PseudoJ1:%s - PseudoJ2:%s \n",gameEntry.playerNumber,gameEntry.gameMode,gameEntry.pseudoJ1,gameEntry.pseudoJ2); //Affichage terminal
-
-	init_plateau();
-
-	NUMBOX placement;
-	placement.c = 4;
-	placement.l = 4;
-
-	affiche_plateau_debug();
-	placer_pion(placement);
-	affiche_plateau_debug();
-
-	NUMBOX destination;
-	destination.c = 3;
-	destination.l = 3;
-
-	deplacer_pion(placement, destination);
-	affiche_plateau_debug();
-
-	retirer_pion(destination);
-	affiche_plateau_debug();
-	affiche_plateau(screen);
-
-	wait_esc(screen);
-	
-	return 0;
-}
-
-//Modèle
-
-void init_plateau(){
-	int i,j;
-
-	for (i=0;i < 6; i++){
-		for(j=0; j < 5; j++){
-				plateau[i][j].typeP = VIDE;
-		}
-	}
-}
-
-COUL premier_joueur(){
-	srand(time(NULL));
-	int tirage;
-
-	tirage = rand()%2;
-
-	if (tirage == 0)
-	{
-		return BLANC;
-	}else{
-		return NOIR;
-	}
-}
-
-void placer_pion(NUMBOX position){
-	plateau[position.l][position.c].typeP = PION;
-}
-
-void deplacer_pion(NUMBOX depart, NUMBOX destination){
-	if (plateau[depart.l][depart.c].typeP == PION)
-	{
-		plateau[depart.l][depart.c].typeP = VIDE;
-		plateau[destination.l][destination.c].typeP = PION;
-	}
-}
-
-void retirer_pion(NUMBOX position){
-	plateau[position.l][position.c].typeP = VIDE;
-}
-
-
-//Controlleur
-
-void wait_esc(SDL_Surface* screen){
-
-	int esc;
-	esc = 0;
-
-	while(esc == 0){
-		SDL_Event event;
-		SDL_WaitEvent(&event);
-		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
-		{
-			//Free
-			TTF_Quit();
-			SDL_FreeSurface(screen);
-			SDL_Quit();
-			esc = 1;
-		}
-	}
-}
-
-//Vue
-
-void affiche_plateau_debug(){
-
-	int i,j;
-
-	for (i = 0; i < 6; i++)
-	{
-		printf("(");
-		for(j = 0; j < 5; j++){
-			printf(" %d ", plateau[i][j].typeP);
-		}
-
-		printf(")\n");
-	}
-	printf("\n\n");
-}
-
-void affiche_plateau(SDL_Surface* screen){
 
 	int i;
 	int hauteur;
@@ -254,7 +120,13 @@ void affiche_plateau(SDL_Surface* screen){
 
 
 
-	SDL_Flip(screen);
+	if(gameEntry.playerNumber==0){
+		printf("Quit\n");
+		return 0;
+	} else {
+		//Continuer le programme - ouvrir le jeu
+		return 0;
+	}
 }
 
 void WindowsNameIcon(SDL_Surface* screen){ //Donne un nom à la fenêtre SDL et définie un icone (32x32 format bmp) au programme
@@ -416,7 +288,7 @@ void SpecialYote(SDL_Surface* screen){ //Change couleur aléatoire du texte Yote
 
 int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et Crédits respectivement choix = 1, 2 ou 3	int continuer = 1;
 	SDL_Event event;
-	int continuer=1;
+	int continuer=1, page=1;
 
 	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50); //Fond
 	switch(choix){ //Choisie quoi afficher selon choix
@@ -424,7 +296,7 @@ int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et C
 			LoadScoreText(screen);
 			break;
 		case 2:
-			LoadReglesText(screen);
+			LoadReglesText(screen,page);
 			break;
 		case 3:
 			LoadCreditText(screen);
@@ -453,13 +325,31 @@ int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et C
 					if(event.button.x<200 && event.button.y<60){ //Clic sur Retour
 							continuer = 0; //Quitte boucle while de ScoreRegleCredit, vas donc renvoyer 1 dans la variable continuer de Menu, donc ne quittera pas le while de Menu
 					}
+					if(choix==2){
+						if(event.button.x>830 && event.button.y<80){ //Clic sur Retour
+							page=2;
+						}
+						if(event.button.x>790 &&event.button.x<829 && event.button.y<80){ //Clic sur Retour
+							page=1;
+						}
+						LoadReglesText(screen,page);
+					}
 				}
 				break;
 			case SDL_MOUSEMOTION:
 				if(event.motion.x<200 && event.motion.y<60){ //Curseur sur Retour
 					DrawTextShaded(screen,20,10,"Polices/LibreBaskerville-Regular.ttf",50,255,0,0,"Retour",50,50,50);
+				} else if(event.motion.x>830 && event.motion.y<80 && page==1 && choix==2){ //Curseur sur flèche
+					DrawTriangle(screen,840,20,870,50,840,80,255,0,0);
+				} else if(event.motion.x>790 && event.motion.x<829 && event.motion.y<80 && page==2 && choix==2){
+					DrawTriangle(screen,820,20,790,50,820,80,255,0,0);
 				} else { //Efface le surlignage
 					DrawTextShaded(screen,20,10,"Polices/LibreBaskerville-Regular.ttf",50,255,255,255,"Retour",50,50,50);
+					if(page==1 && choix==2){
+						DrawTriangle(screen,840,20,870,50,840,80,255,255,255);
+					} else if(page==2 && choix==2){
+						DrawTriangle(screen,820,20,790,50,820,80,255,255,255);
+					}
 				}
 				SDL_Flip(screen);
 				break;
@@ -475,6 +365,8 @@ int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et C
 }
 
 void LoadCreditText(SDL_Surface* screen){ //Affichage Crédits
+	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Crédits",50,50,50);
+	DrawRectangle(screen,380,60,150,2,255,255,255);
 	DrawTextShaded(screen,180,130,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"Ce jeu a été réalisé pour le projet algorithmique",50,50,50);
 	DrawTextShaded(screen,65,160,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"de première année d'école d'ingénieurs ISTY de Vélizy-Villacoublay.",50,50,50);
 	DrawTextShaded(screen,205,190,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"Ce projet a été dirigé par ABOUDA Dhekra",50,50,50);
@@ -487,11 +379,116 @@ void LoadCreditText(SDL_Surface* screen){ //Affichage Crédits
 	DrawTextShaded(screen,180,600,"Polices/LibreBaskerville-Regular.ttf",22,255,255,255,"Nous vous remercions d'avoir joué au jeu YOTE",50,50,50);
 }
 
-void LoadReglesText(SDL_Surface* screen){ //Affichage Règles
+void LoadReglesText(SDL_Surface* screen, int page){ //Affichage Règles
+	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Règles",50,50,50);
+	DrawRectangle(screen,380,60,135,2,255,255,255);
 
+	if(page==1){
+		DrawTextShaded(screen,20,100,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Le Yoté se joue sur un plateau de 5 cases sur 6 et 24 pions (12 de chaque couleur).",50,50,50);
+		DrawTextShaded(screen,20,150,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Au début de la partie, le plateau de jeu est vide. Chaque joueur dispose de 12 pions dans",50,50,50);
+		DrawTextShaded(screen,20,175,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"une réserve.",50,50,50);
+		DrawTextShaded(screen,20,225,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Le joueur qui commence à jouer est tiré au sort. Le but du jeu est d’éliminer tous les pions",50,50,50);
+		DrawTextShaded(screen,20,250,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"de l'adversaire du plateau de jeu. Les pions ne sont pas placés sur le plateau en début de",50,50,50);
+		DrawTextShaded(screen,20,275,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"partie mais au fur et à mesure de cette dernière.",50,50,50);
+		DrawTextShaded(screen,20,325,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Tour à tour, chaque joueur peut soit poser un de ses pions sur une case libre du plateau,",50,50,50);
+		DrawTextShaded(screen,20,350,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"soit déplacer un de ses pions déjà posé, horizontalement ou verticalement, d’une case.",50,50,50);
+		DrawTextShaded(screen,20,395,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Cette dernière doit être libre. Il n'est pas nécessaire d'avoir posé tous ses pions pour",50,50,50);
+		DrawTextShaded(screen,20,420,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"commencer les déplacements.",50,50,50);
+		DrawTextShaded(screen,20,470,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Pour prendre un pion adverse il suffit de sauter par-dessus celui-ci, en avant ou en",50,50,50);
+		DrawTextShaded(screen,20,495,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"arrière, horizontalement ou verticalement, mais jamais en diagonale. Il faut donc que la",50,50,50);
+		DrawTextShaded(screen,20,520,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"case derrière celle du pion à prendre soit libre tout en étant dans l’alignement pion du",50,50,50);
+		DrawTextShaded(screen,20,545,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"joueur et du pion adverse. Lors d’une prise, le pion avance donc de deux cases.",50,50,50);
+		DrawTextShaded(screen,20,595,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"De plus, chaque pion pris permet d'en capturer un deuxième, choisi parmi les pions",50,50,50);
+		DrawTextShaded(screen,20,620,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"adverses présents sur le plateau. On capture donc 2 pions à chaque prise. Il n’est pas",50,50,50);
+		DrawTextShaded(screen,20,645,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"possible de prendre plus de deux pions par coup.",50,50,50);
+	} else if(page==2){
+		DrawTextShaded(screen,20,100,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Lors d’une prise, si un pion est capturé et que l’on souhaite capturer le deuxième, si jamais",50,50,50);
+		DrawTextShaded(screen,20,125,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"il n’y a plus de pion présent sur le plateau, exceptionnellement un pion sera pris dans la",50,50,50);
+		DrawTextShaded(screen,20,150,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"réserve de l’adversaire.",50,50,50);
+		DrawTextShaded(screen,20,200,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Lorsqu’un pion est introduit en jeu, il ne peut pas être utilisé lors du même tour pour",50,50,50);
+		DrawTextShaded(screen,20,225,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"faire une prise.",50,50,50);
+		DrawTextShaded(screen,20,275,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Si lors d’un tour, un joueur avance son pion, il ne peut pas faire l’inverse de ce mouvement",50,50,50);
+		DrawTextShaded(screen,20,300,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"lors de son prochain tour.",50,50,50);
+		DrawTextShaded(screen,20,350,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Le jeu prend fin de deux manière différentes :",50,50,50);
+		DrawTextShaded(screen,60,375,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"-La version rapide : un joueur perd lorsqu'il n’a plus de pion sur le plateau de jeu",50,50,50);
+		DrawTextShaded(screen,70,400,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"même s'il lui en reste dans sa réserve.",50,50,50);
+		DrawTextShaded(screen,60,425,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"-La version longue : un joueur perd lorsqu’il n’a plus de pion ni sur le plateau ni sans",50,50,50);
+		DrawTextShaded(screen,70,450,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"la réserve.",50,50,50);
+		DrawTextShaded(screen,20,500,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"Si les deux joueurs se retrouvent à égalité (tous les pions du plateau ont été capturés et qu’il",50,50,50);
+		DrawTextShaded(screen,20,525,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"ne reste plus que 4 pions sur le plateau, deux pour chaque joueur), la fin de partie sera",50,50,50);
+		DrawTextShaded(screen,20,550,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"jouée en 10 coups. À la fin de ces 10 coups s’il n’y a pas de prise par un joueur la partie est",50,50,50);
+		DrawTextShaded(screen,20,575,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"considérée comme nulle.",50,50,50);
+		DrawTextShaded(screen,20,625,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"À tout moment, il est possible d'appuyer sur la touche 'Echap' de votre clavier pour quitter",50,50,50);
+		DrawTextShaded(screen,20,650,"Polices/LibreBaskerville-Regular.ttf",19,255,255,255,"le jeu.",50,50,50);
+	}
 }
-void LoadScoreText(SDL_Surface* screen){ //Affichage Score
 
+void LoadScoreText(SDL_Surface* screen){ //Affichage Score
+	FILE* file = NULL;
+	TTF_Font *police = NULL;
+	char chaine[40], pseudoJ1[11], pseudoJ2[11];
+	int scoreJ1, scoreJ2, i=0, hauteur=110, w, h, size=25;
+
+	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",size);
+
+	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Scores",50,50,50);
+	DrawRectangle(screen,380,60,135,2,255,255,255);
+
+	file = fopen("scores.txt","r");
+
+	if(!file){
+		fprintf(stderr, "Impossible lire fichier score\n");
+		exit(1);
+	} else {
+		while(fgets(chaine,40,file) && i<10){ //Recupere les 1à premières lignes du fichier.txt et les affichent centrées
+			lastCharDel(chaine);
+			TTF_SizeText(police,chaine,&w,&h);
+			DrawTextShaded(screen,(WIDTH/2)-(w/2),hauteur,"Polices/LibreBaskerville-Regular.ttf",size,255,255,255,chaine,50,50,50);
+			hauteur+=55;
+			i++;
+		}
+	}
+	fclose(file);
+	TTF_CloseFont(police);
+}
+
+void AddScore(char pseudoG[11], char pseudoP[11], int scoreG, int scoreP){ //Ajoute une nouvelle ligne à score.txt
+	char c;
+	char chaine[40], scoreText[5];
+
+	strcat(chaine,pseudoG); //Fabrication de la string à écrire
+	strcat(chaine," VS ");
+	strcat(chaine,pseudoP);
+	strcat(chaine," : ");
+	sprintf(scoreText,"%d",scoreG);
+	strcat(chaine,scoreText);
+	strcat(chaine,"-");
+	sprintf(scoreText,"%d",scoreP);
+	strcat(chaine,scoreText);
+
+	FILE* file = fopen("scores.txt","r+");	//score.txt
+	FILE* tampon = tmpfile();				//fichier temporaire, on y colle tout le contenu de score.txt, on ajoute notre string dans score.txt, puis on remet tout le fichier temporaire dans score.txt
+
+	if(!file || !tampon){
+		fprintf(stderr, "Impossible ecrire fichier score\n");
+		exit(1);
+	} else {
+		while((c=fgetc(file))!=EOF){
+			fputc(c,tampon);
+		}
+
+		rewind(file);
+		rewind(tampon);
+		fputs(chaine,file);
+		fputs("\n",file);
+
+		while((c=fgetc(tampon))!=EOF){
+			fputc(c,file);
+		}
+	}
+	fclose(tampon);
+	fclose(file);
 }
 
 int Jouer(SDL_Surface* screen, int choix, GameEntry* gameEntry){ //Page Jouer et sa suite (Nombre joueur, Mode de jeu, PseudoJ1, PseudoJ2 et Récapitulatif) - variable choix définie quelle page on souhaite
@@ -521,9 +518,6 @@ int Jouer(SDL_Surface* screen, int choix, GameEntry* gameEntry){ //Page Jouer et
 	SDL_Flip(screen);
 
 	while (continuer){
-		if(choix==3 || choix==4){
-			LoadPseudoText(screen,choix-2,gameEntry); //L'affichage des pseudos doit être fait à chaque évênement
-		}
 		SDL_WaitEvent(&event);
 		switch(event.type){
 			case SDL_QUIT: //Croix de la fenêtre SDL = quitter
@@ -564,6 +558,9 @@ int Jouer(SDL_Surface* screen, int choix, GameEntry* gameEntry){ //Page Jouer et
 						strcat(gameEntry->pseudoJ2,letter);
 						strcat(gameEntry->pseudoJ2,"\0");
 					}
+				}
+				if(choix==3 || choix==4){
+					LoadPseudoText(screen,choix-2,gameEntry); //L'affichage des pseudos doit être fait à chaque évênement - ne dois pas clignoter
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
@@ -837,6 +834,10 @@ void DrawRectangle(SDL_Surface* screen, int posx, int posy, int width, int heigh
 	SDL_BlitSurface(rectangle, NULL, screen, &rectanglePos);
 
 	SDL_FreeSurface(rectangle);
+}
+
+void DrawTriangle(SDL_Surface* screen, int x1, int y1, int x2, int y2, int x3, int y3, int red, int green, int blue){
+	filledTrigonRGBA(screen,x1,y1,x2,y2,x3,y3,red,green,blue,255);
 }
 
 void DrawText(SDL_Surface* screen, int posx, int posy, char font[255], int size, int red, int green, int blue, char text[255]){ //Affiche un texte, point haug-gauche de départ - voir différence sdl entre Solid Shaded et Blended

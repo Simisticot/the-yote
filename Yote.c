@@ -71,8 +71,14 @@ int main(int argc, char *argv[]){
 	gameEntry = Menu(screen); //Menu
 
 	printf("Nbrlayer:%d - GameMode:%d - PseudoJ1:%s - PseudoJ2:%s \n",gameEntry.playerNumber,gameEntry.gameMode,gameEntry.pseudoJ1,gameEntry.pseudoJ2); //Affichage terminal
-	
-	return 0;
+
+	if(gameEntry.playerNumber==0){
+		printf("Quit\n");
+		return 0;
+	} else {
+		//Continuer le programme - ouvrir le jeu
+		return 0;
+	}
 }
 
 void WindowsNameIcon(SDL_Surface* screen){ //Donne un nom à la fenêtre SDL et définie un icone (32x32 format bmp) au programme

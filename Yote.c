@@ -12,7 +12,7 @@
 #define WIDTH 900
 #define HEIGHT 700
 
-//Structures
+////Structures////
 
 typedef struct GameEntry { //Structure renvoyée par le Menu pour démarer le jeu
 	int playerNumber; //1 or 2
@@ -44,33 +44,33 @@ struct BOX{
 typedef struct BOX BOX;
 
 //Variable Globale contenant le plateau
-
 BOX plateau[6][5];
 
-//Sommaire des fonctions
+////Sommaire des fonctions////
 
-//Fonction du Menu - à trier dans Modele Vue Controleur
-void WindowsNameIcon(SDL_Surface*);
-GameEntry Menu(SDL_Surface*);
-void LoadMenuText(SDL_Surface*);
-void SpecialYote(SDL_Surface*);
-int ScoreRegleCredit(SDL_Surface*,int);
-void LoadCreditText(SDL_Surface*);
-void LoadReglesText(SDL_Surface*,int);
-void LoadScoreText(SDL_Surface*);
-void AddScore(char[11],char[11],int,int);
-int Jouer(SDL_Surface*,int,GameEntry*);
-void LoadPlayerText(SDL_Surface*);
-void LoadModeText(SDL_Surface*);
-void LoadPseudoText(SDL_Surface*,int,GameEntry*);
-char GetLetter(int);
-void LoadRecapText(SDL_Surface*,GameEntry*);
-void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int);
-void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int);
-void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]);
-void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int);
-SDL_Color GetPixelColor(SDL_Surface*,int,int);
-void lastCharDel(char*);
+//Fonction du Menu
+void WindowsNameIcon(SDL_Surface*); //Modele
+GameEntry Menu(SDL_Surface*); //Modele
+void LoadMenuText(SDL_Surface*); //Vue
+void Fond(SDL_Surface*); //Vue
+void SpecialYote(SDL_Surface*); //Vue
+int ScoreRegleCredit(SDL_Surface*,int); //Modele
+void LoadCreditText(SDL_Surface*); //Vue
+void LoadReglesText(SDL_Surface*,int); //Vue
+void LoadScoreText(SDL_Surface*); //Vue
+void AddScore(char[11],char[11],int,int); //Controleur
+int Jouer(SDL_Surface*,int,GameEntry*); //Modele
+void LoadPlayerText(SDL_Surface*); //Vue
+void LoadModeText(SDL_Surface*); //Vue
+void LoadPseudoText(SDL_Surface*,int,GameEntry*); //Vue
+char GetLetter(int); //Controleur
+void LoadRecapText(SDL_Surface*,GameEntry*); //Vue
+void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int); //Vue
+void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int); //Vue
+void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]); //Vue
+void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int); //Vue
+SDL_Color GetPixelColor(SDL_Surface*,int,int); //Controleur
+void lastCharDel(char*); //Controleur
 
 //Modèle
 void init_plateau();
@@ -125,14 +125,12 @@ int main(int argc, char *argv[]){
 		printf("Quit Menu\n");
 		return 0;
 	} else {
-
-		DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
-
+		Fond(screen);
+		//Premier affichage du plateau, à placer dans fonctions plus tard
 		DrawRectangle(screen,50,50,500,1,255,255,255);
 		DrawRectangle(screen,50,650,500,1,255,255,255);
 		DrawRectangle(screen,550,50,1,600,255,255,255);
 		DrawRectangle(screen,50,50,1,600,255,255,255);
-
 
 		hauteur = 50;
 		largeur = 50;
@@ -153,7 +151,7 @@ int main(int argc, char *argv[]){
 		DrawRectangle(screen,600,500,300,1,255,255,255);
 		SDL_Flip(screen);
 		wait_esc(screen);
-		printf("Quit Jeu");
+		printf("Quit Jeu\n");
 		return 0;
 	}
 }
@@ -177,7 +175,7 @@ GameEntry Menu(SDL_Surface* screen){ //Menu principal
 	gameEntryMenu.pseudoJ1[0]='\0'; //Initialisation des deux pseudos à vide
 	gameEntryMenu.pseudoJ2[0]='\0';
 
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50); //Fond
+	Fond(screen);
 
 	LoadMenuText(screen); //Affichage menu principal
 	SDL_Flip(screen);
@@ -234,7 +232,7 @@ GameEntry Menu(SDL_Surface* screen){ //Menu principal
 							}
 						}while(continuer>0 && continuer<6);
 						if(continuer==0){ //Revenir au menu - obtenue quand clic sur Retour dans la page de choix nombre de joueur
-							DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+							Fond(screen);
 							LoadMenuText(screen);
 							SDL_Flip(screen);
 							gameEntryMenu.pseudoJ1[0]='\0'; //Si on est revenu on Menu principal, on oublis les pseudos et fini reviens à 0
@@ -304,6 +302,10 @@ void LoadMenuText(SDL_Surface* screen){ //Affichage menu principal
 	DrawTextShaded(screen,705,637,"Polices/LibreBaskerville-Regular.ttf",50,255,255,255,"Crédits",50,50,50);
 }
 
+void Fond(SDL_Surface* screen){ //Affiche le fond - Efface l'écran
+	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+}
+
 void SpecialYote(SDL_Surface* screen){ //Change couleur aléatoire du texte Yote dans le Menu
 	SDL_Color pixelColorYote;
 	do{
@@ -319,7 +321,7 @@ int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et C
 	SDL_Event event;
 	int continuer=1, page=1;
 
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50); //Fond
+	Fond(screen); //Fond
 	switch(choix){ //Choisie quoi afficher selon choix
 		case 1:
 			LoadScoreText(screen);
@@ -387,7 +389,7 @@ int ScoreRegleCredit(SDL_Surface* screen, int choix){ //Page Score, Règles et C
 		}
 	}
 
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50); //Si on arrive içi, c'est que l'on a cliqué sur Retour, donc on affiche le Menu
+	Fond(screen); //Si on arrive içi, c'est que l'on a cliqué sur Retour, donc on affiche le Menu
 	LoadMenuText(screen);
 	SDL_Flip(screen);
 	return 1; //Ce 1 va dans la variable continuer du Menu
@@ -409,7 +411,7 @@ void LoadCreditText(SDL_Surface* screen){ //Affichage Crédits
 }
 
 void LoadReglesText(SDL_Surface* screen, int page){ //Affichage Règles
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+	Fond(screen);
 	DrawTextShaded(screen,380,10,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,"Règles",50,50,50);
 	DrawRectangle(screen,380,60,135,2,255,255,255);
 
@@ -525,7 +527,7 @@ int Jouer(SDL_Surface* screen, int choix, GameEntry* gameEntry){ //Page Jouer et
 	SDL_Event event;
 	char letter[2]; //Variable récupérant une lettre + \0 - utilisé dans la formation des pseudos joueur
 
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50); //Fond
+	Fond(screen); //Fond
 
 	switch(choix){ //Choisie quoi afficher selon choix
 		case 1:
@@ -907,7 +909,7 @@ void DrawTextShaded(SDL_Surface* screen, int posx, int posy, char font[255], int
 	TTF_CloseFont(police);
 }
 
-SDL_Color GetPixelColor(SDL_Surface* screen, int x, int y){ //renvoie une SDL_Color (continuant les valeurs RBG), du pixel aux coordonnées (x,y) - permet de savoir la couleur du pixel sur lequel on a cliqué
+SDL_Color GetPixelColor(SDL_Surface* screen, int x, int y){ //renvoie une SDL_Color (continuant les valeurs RBG), du pixel aux coordonnées (x,y) - permet de savoir la couleur du pixel sous le curseur
 	SDL_Color pixelColor;
 	Uint32* allPixels;
 	Uint32 pixel;
@@ -1015,7 +1017,7 @@ void affiche_plateau(SDL_Surface* screen){
 	int largeur;
 
 
-	DrawRectangle(screen,0,0,WIDTH,HEIGHT,50,50,50);
+	Fond(screen);
 
 	DrawRectangle(screen,50,50,500,1,255,255,255);
 	DrawRectangle(screen,50,650,500,1,255,255,255);

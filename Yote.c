@@ -27,7 +27,7 @@ enum TYPE{
 typedef enum TYPE TYPE;
 
 enum COUL{
-	BLANC, NOIR
+	BLANC, NOIR, NUL
 };
 typedef enum COUL COUL;
 
@@ -43,8 +43,24 @@ struct BOX{
 };
 typedef struct BOX BOX;
 
+struct POINT{
+	int x;
+	int y;
+};
+typedef struct POINT POINT;
+
+struct JOUEUR{
+	int reserve;	/*[0;12]*/
+	COUL coulj;     //?
+};
+typedef struct JOUEUR JOUEUR;
+
 //Variable Globale contenant le plateau
+
 BOX plateau[6][5];
+int TOUR;   		//variable contenant 1 ou 2 et est mis à jour tour à tour.
+JOUEUR J1;			//contenant la réserve 1
+JOUEUR J2;			//contenant la réserve 2
 
 ////Sommaire des fonctions////
 
@@ -79,12 +95,26 @@ void placer_pion(NUMBOX position);
 void retirer_pion(NUMBOX position);
 void deplacer_pion(NUMBOX depart, NUMBOX destination);
 
+void alterne_tour();				//change la valeur de tour {1;2}
+void init_J1vsJ2();					//initialise les variables J1 et J2
+void prendre_reserve();				//réduit la réserve correspondante à tour
+int est_case_j(NUMBOX NB);			//vérifie si la case sélectionnée contient un pion du joueur 
+int est_case_vide(NUMBOX NB);		//vérifie si la case sélectionnée est vide
+int est_clic_reserve(POINT clic);	//vérifie si la case sélectionnée est dans la réserve correspondant à tour
+int est_clic_plateau(POINT clic);	//vérifie si la case sélectionnée est dans le plateau
+
 //Vue
 void affiche_plateau_debug();
+void affiche_plateau(SDL_Surface* screen);
+
+void affiche_pion(SDL_Surface* screen,NUMBOX NB);
+void efface_pion(SDL_Surface* screen,NUMBOX NB);
 
 //Controleur
 void wait_esc(SDL_Surface*);
-
+POINT wait_clic(SDL_Surface* screen);
+POINT numbox_to_point(NUMBOX NB);
+NUMBOX point_to_numbox(POINT P);
 
 //     MAIN     ///////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]){
@@ -126,30 +156,56 @@ int main(int argc, char *argv[]){
 		return 0;
 	} else {
 		Fond(screen);
-		//Premier affichage du plateau, à placer dans fonctions plus tard
-		DrawRectangle(screen,50,50,500,1,255,255,255);
-		DrawRectangle(screen,50,650,500,1,255,255,255);
-		DrawRectangle(screen,550,50,1,600,255,255,255);
-		DrawRectangle(screen,50,50,1,600,255,255,255);
-
-		hauteur = 50;
-		largeur = 50;
-		for (i = 0; i < 4; i++){
-			largeur += 100;
-			DrawRectangle(screen,largeur,hauteur,1,600,255,255,255);
+		
+	//INITIALISATION
+	init_J1vsJ2(J1,J2);
+	init_plateau();
+	affiche_plateau(screen);
+	TOUR=1;
+	
+	DrawTextShaded(screen,602,2,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve 1 provisoire",50,50,50);		//affichages provisoires
+	DrawTextShaded(screen,602,452,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve 2 provisoire",50,50,50);
+	SDL_Flip(screen);
+	
+	//TOURS
+	
+	POINT clic1; POINT clic2; NUMBOX NB1; NUMBOX NB2; int k; k=0;
+	
+	/*while (k==0)
+	{	printf("J%d \n", TOUR);
+		do 										//boucle du clic1
+		{	printf("clic1 \n");
+			clic1=wait_clic(screen);
+			NB1=point_to_numbox(clic1);
+			printf("clic1 %d %d \n",clic1.x,clic1.y);
+			
+		}while(!((est_clic_plateau(clic1) && !est_case_vide(NB1) && est_case_j(NB1)) || (est_clic_reserve(clic1))));
+	
+		do 										//boucle du clic2
+		{	printf("clic2 \n");
+			clic2=wait_clic(screen);
+			NB2=point_to_numbox(clic2);
+			printf("clic2 %d %d \n",clic2.x,clic2.y);
+			
+		}while (!(est_clic_plateau(clic2) && est_case_vide(NB2)));
+			
+		if (clic1.x>600)						//boucle des déplacements
+		{	prendre_reserve();
+			placer_pion(NB2);}
+			
+		else {
+			deplacer_pion(NB1,NB2);
+			efface_pion(screen,NB1);
 		}
-		largeur = 50;
-		for (i = 0; i < 5; i++){
-			hauteur += 100;
-			DrawRectangle(screen,largeur,hauteur,500,1,255,255,255);
-		}
-
-		DrawRectangle(screen,600,0,1,HEIGHT,255,255,255);
-		DrawRectangle(screen,600,50,300,1,255,255,255);
-		DrawRectangle(screen,600,250,300,1,255,255,255);
-		DrawRectangle(screen,600,450,300,1,255,255,255);
-		DrawRectangle(screen,600,500,300,1,255,255,255);
-		SDL_Flip(screen);
+		
+		affiche_pion(screen,NB2);
+		
+		affiche_plateau_debug();										//affichages terminaux
+		printf("réserve j1 %d  j2 %d \n", J1.reserve,J2.reserve);		//
+		
+		alterne_tour();
+	}	*/
+		
 		wait_esc(screen);
 		printf("Quit Jeu\n");
 		return 0;
@@ -889,7 +945,7 @@ void DrawText(SDL_Surface* screen, int posx, int posy, char font[255], int size,
 	TTF_CloseFont(police);
 }
 
-void DrawTextShaded(SDL_Surface* screen, int posx, int posy, char font[255], int size, int red, int green, int blue, char text[255], int bgred, int bggreen, int bgblue){ //Affiche un texte, point haug-gauche de départ - donner la couleur de fond
+void DrawTextShaded(SDL_Surface* screen, int posx, int posy, char font[255], int size, int red, int green, int blue, char text[255], int bgred, int bggreen, int bgblue){ //Affiche un texte, point haut-gauche de départ - donner la couleur de fond
 	TTF_Font *police = NULL;
 	SDL_Color policeColor = {red,green,blue};
 	SDL_Color bgColor = {bgred,bggreen,bgblue};
@@ -936,6 +992,7 @@ void init_plateau(){
 	for (i=0;i < 6; i++){
 		for(j=0; j < 5; j++){
 				plateau[i][j].typeP = VIDE;
+				plateau[i][j].coulP = NUL;
 		}
 	}
 }
@@ -956,13 +1013,19 @@ COUL premier_joueur(){
 
 void placer_pion(NUMBOX position){
 	plateau[position.l][position.c].typeP = PION;
+	if (TOUR==1) plateau[position.l][position.c].coulP = J1.coulj;
+		else plateau[position.l][position.c].coulP = J2.coulj;
 }
 
 void deplacer_pion(NUMBOX depart, NUMBOX destination){
 	if (plateau[depart.l][depart.c].typeP == PION)
 	{
 		plateau[depart.l][depart.c].typeP = VIDE;
+		plateau[depart.l][depart.c].coulP = NUL;
 		plateau[destination.l][destination.c].typeP = PION;
+		
+		if (TOUR==1) plateau[destination.l][destination.c].coulP = J1.coulj;
+		else plateau[destination.l][destination.c].coulP = J2.coulj;
 	}
 }
 
@@ -970,6 +1033,80 @@ void retirer_pion(NUMBOX position){
 	plateau[position.l][position.c].typeP = VIDE;
 }
 
+void init_J1vsJ2(){
+	
+	J1.reserve=12;
+	J2.reserve=12;
+	
+	J1.coulj=BLANC;
+	J2.coulj=NOIR;
+	
+}
+	
+int est_clic_reserve(POINT clic){
+	
+	int bool;
+	bool=0;
+	
+	if (TOUR==1){
+		
+		if (600<clic.x && clic.x<900 && 0<clic.y && clic.y<50 && J1.reserve>0)
+		{bool=1;}
+			
+	}else{
+		
+		if (600<clic.x && clic.x<900 && 450<clic.y && clic.y<500 && J2.reserve>0)
+		{bool=1;}
+	}
+	return bool;
+}
+
+int est_clic_plateau(POINT clic){
+	
+	int bool;
+	bool=0;
+	
+	if (clic.x<550 && 50<clic.x && clic.y<650 && 50<clic.y) bool=1;
+
+	return bool;
+}
+
+void prendre_reserve(){
+	
+	if (TOUR==1) J1.reserve=J1.reserve-1;
+	else J2.reserve=J2.reserve-1;
+}
+
+int est_case_vide(NUMBOX NB)
+{
+	int bool;
+	bool=0;
+	
+	if (NB.l<6 && NB.c<5){
+		if (plateau[NB.l][NB.c].typeP == VIDE) bool=1; 
+	}
+	
+	return bool;
+}
+
+int est_case_j(NUMBOX NB)	//vérifie que la case appartient au joueur courant
+{
+	int bool;
+	bool=0;
+	
+	if (TOUR == 1){
+		if (plateau[NB.l][NB.c].coulP == J1.coulj) bool = 1;}
+	else{
+		if (plateau[NB.l][NB.c].coulP == J2.coulj) bool = 1;}
+		
+	return bool;
+}
+
+void alterne_tour()
+{	
+	if (TOUR==1) TOUR=2;
+	else TOUR=1;
+}
 
 //Controlleur
 
@@ -992,7 +1129,71 @@ void wait_esc(SDL_Surface* screen){
 	}
 }
 
+POINT wait_clic(SDL_Surface* screen){
+
+	int clic;
+	POINT P;
+	clic = 0;
+
+	while(clic == 0){
+		SDL_Event event;
+		SDL_WaitEvent(&event);
+		if (event.type == SDL_MOUSEBUTTONDOWN)
+		{
+			P.x=event.button.x;
+			P.y=event.button.y;
+			clic = 1;
+		}
+	}
+	return P;
+}
+
+NUMBOX point_to_numbox(POINT P) // on considère que le point est dans le plateau :  
+{	NUMBOX NB;		// => 50 <P.x< 550 et 50 <P.y< 650
+	
+	NB.c= ((P.x-50)/100); // ici la 1ere case est [0;0] 
+	NB.l= ((P.y-50)/100);
+
+	return NB;
+}	
+
+POINT numbox_to_point(NUMBOX NB) 
+{	POINT P;
+	
+	P.x=(100*NB.c)+50;
+	P.y=(100*NB.l)+50;
+
+	return P;
+}	
+
 //Vue
+
+void affiche_pion(SDL_Surface* screen,NUMBOX NB){
+	
+	POINT HG;
+	HG=numbox_to_point(NB);
+	
+	HG.x=HG.x+10;
+	HG.y=HG.y+10;
+	
+	if (TOUR==1) {DrawRectangle(screen,HG.x,HG.y,80,80,255,0,255);}
+	else {DrawRectangle(screen,HG.x,HG.y,80,80,0,255,255);}
+	
+	SDL_Flip(screen);
+}
+
+void efface_pion(SDL_Surface* screen,NUMBOX NB){
+	
+	POINT HG;
+	HG=numbox_to_point(NB);
+	
+	HG.x=HG.x+1;
+	HG.y=HG.y+1;
+	
+	DrawRectangle(screen,HG.x,HG.y,99,99,50,50,50);
+	
+	SDL_Flip(screen);
+}
 
 void affiche_plateau_debug(){
 
@@ -1003,6 +1204,7 @@ void affiche_plateau_debug(){
 		printf("(");
 		for(j = 0; j < 5; j++){
 			printf(" %d ", plateau[i][j].typeP);
+			printf(" %d | ", plateau[i][j].coulP);
 		}
 
 		printf(")\n");

@@ -1,0 +1,12 @@
+michel VS francois : 230-180
+bertrant VS eric : 200-100
+martin VS philou : 200-200
+robert VS jean : 260-70
+simon VS albert : 170-160
+anastasiat VS micheline : 100-90
+hello VS world : 123-456
+Joueur1 VS Joueur2 : 100-100
+blabla VS aeiouy : 50-40
+machin VS truc : 987-654
+hey VS you : 100-99
+robot VS humain : 999-1

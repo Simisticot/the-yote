@@ -109,6 +109,9 @@ void affiche_plateau(SDL_Surface* screen);
 
 void affiche_pion(SDL_Surface* screen,NUMBOX NB);
 void efface_pion(SDL_Surface* screen,NUMBOX NB);
+void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry); //Affichage des pseudos, type de partie
+void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2);
+void affiche_tour(SDL_Surface* screen);
 
 //Controleur
 void wait_esc(SDL_Surface*);
@@ -161,18 +164,19 @@ int main(int argc, char *argv[]){
 	init_J1vsJ2(J1,J2);
 	init_plateau();
 	affiche_plateau(screen);
+	affichage_info_jeu(screen, &gameEntry);
+	affiche_reserve(screen, J1, J2);
 	TOUR=1;
+	affiche_tour(screen);
 	
-	DrawTextShaded(screen,602,2,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve 1 provisoire",50,50,50);		//affichages provisoires
-	DrawTextShaded(screen,602,452,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve 2 provisoire",50,50,50);
 	SDL_Flip(screen);
-	
 	//TOURS
 	
 	POINT clic1; POINT clic2; NUMBOX NB1; NUMBOX NB2; int k; k=0;
 	
-	/*while (k==0)
-	{	printf("J%d \n", TOUR);
+	while (k==0)
+	{	
+		printf("J%d \n", TOUR);
 		do 										//boucle du clic1
 		{	printf("clic1 \n");
 			clic1=wait_clic(screen);
@@ -198,13 +202,15 @@ int main(int argc, char *argv[]){
 			efface_pion(screen,NB1);
 		}
 		
+		affiche_reserve(screen, J1, J2);
 		affiche_pion(screen,NB2);
 		
 		affiche_plateau_debug();										//affichages terminaux
 		printf("réserve j1 %d  j2 %d \n", J1.reserve,J2.reserve);		//
 		
 		alterne_tour();
-	}	*/
+		affiche_tour(screen);
+	}	
 		
 		wait_esc(screen);
 		printf("Quit Jeu\n");
@@ -1050,12 +1056,12 @@ int est_clic_reserve(POINT clic){
 	
 	if (TOUR==1){
 		
-		if (600<clic.x && clic.x<900 && 0<clic.y && clic.y<50 && J1.reserve>0)
+		if (600<clic.x && clic.x<900 && 200<clic.y && clic.y<250 && J1.reserve>0)
 		{bool=1;}
 			
 	}else{
 		
-		if (600<clic.x && clic.x<900 && 450<clic.y && clic.y<500 && J2.reserve>0)
+		if (600<clic.x && clic.x<900 && 650<clic.y && clic.y<700 && J2.reserve>0)
 		{bool=1;}
 	}
 	return bool;
@@ -1247,5 +1253,78 @@ void affiche_plateau(SDL_Surface* screen){
 
 
 
+	SDL_Flip(screen);
+}
+
+void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry){ //Affichage des pseudos, type de partie
+	TTF_Font *police=NULL;
+	int w, h;
+	char text[15]; //Comme LoadPseudoText, utilise le principe de pré-calcul de la taille occupée pour centrer les textes
+
+	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",30);
+
+	if(gameEntry->playerNumber==1){
+		sprintf(text,"%d joueur",gameEntry->playerNumber);
+	} else {
+		sprintf(text,"%d joueurs",gameEntry->playerNumber);
+	}
+
+	TTF_SizeText(police,text,&w,&h);
+	DrawTextShaded(screen,650,290,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,text,50,50,50); //Affiche nombre de joueurs
+
+	if(gameEntry->gameMode==1){
+		strcpy(text,"Partie rapide");
+	} else {
+		strcpy(text,"Partie longue");
+	}
+
+	TTF_SizeText(police,text,&w,&h);
+	DrawTextShaded(screen,620,350,"Polices/LibreBaskerville-Regular.ttf",40,255,255,255,text,50,50,50); //Affiche type de partie
+
+
+	TTF_SizeText(police,gameEntry->pseudoJ1,&w,&h);
+	DrawTextShaded(screen,610,8,"Polices/LibreBaskerville-Regular.ttf",30,255,255,255,gameEntry->pseudoJ1,50,50,50);
+
+	TTF_SizeText(police,gameEntry->pseudoJ2,&w,&h);
+	DrawTextShaded(screen,610,458,"Polices/LibreBaskerville-Regular.ttf",30,255,255,255,gameEntry->pseudoJ2,50,50,50);
+
+
+	SDL_Flip(screen);
+	TTF_CloseFont(police);
+}
+
+void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2){
+	TTF_Font *police=NULL;
+	int w, h;
+	char text[5];
+
+	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",30);
+
+	DrawTextShaded(screen,602,202,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve J1 - ",50,50,50);
+	
+	sprintf(text,"%d ",J1.reserve);
+	TTF_SizeText(police,text,&w,&h);
+	
+	DrawTextShaded(screen,732,202,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,text,50,50,50);
+	
+	DrawTextShaded(screen,602,652,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve J2 - ",50,50,50);
+	
+	sprintf(text,"%d ",J2.reserve);
+	TTF_SizeText(police,text,&w,&h);
+	DrawTextShaded(screen,732,652,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,text,50,50,50);
+
+}
+
+void affiche_tour(SDL_Surface* screen){
+	
+	if(TOUR==1){
+		DrawRectangle(screen,850,458,40,40,50,50,50);
+		DrawRectangle(screen,850,8,35,35,255,0,255);
+	}
+	else{
+		DrawRectangle(screen,850,8,40,40,50,50,50);
+		DrawRectangle(screen,850,458,35,35,0,255,255);
+	}
+	
 	SDL_Flip(screen);
 }

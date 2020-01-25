@@ -15,7 +15,7 @@
 ////Structures////
 
 typedef struct GameEntry { //Structure renvoyée par le Menu pour démarer le jeu
-	int playerNumber; //1 or 2
+	int playerNumber; //1 ou 2
 	int gameMode; //1:rapide 2:longue
 	char pseudoJ1[11]; //10 caractères + \0
 	char pseudoJ2[11];
@@ -40,6 +40,7 @@ typedef struct NUMBOX NUMBOX;
 struct BOX{
 	TYPE typeP; /* {VIDE, PION} */
 	COUL coulP; /* {BLANC, NOIR} */
+	int Accessible; // 0 par défaut, 1 si accessible par le pion sélectionné lors du premier clic
 };
 typedef struct BOX BOX;
 
@@ -49,11 +50,21 @@ struct POINT{
 };
 typedef struct POINT POINT;
 
+struct COUP{
+	NUMBOX depart;
+	NUMBOX arrivee;
+	int typeCoup; // 0 pour un mouvement, 1 pour un placement de pion
+};
+typedef struct COUP COUP;
+
 struct JOUEUR{
 	int reserve;	/*[0;12]*/
 	COUL coulj;     //?
+	COUP dernierCoup;
 };
 typedef struct JOUEUR JOUEUR;
+
+
 
 //Variable Globale contenant le plateau
 
@@ -102,6 +113,16 @@ int est_case_j(NUMBOX NB);			//vérifie si la case sélectionnée contient un pi
 int est_case_vide(NUMBOX NB);		//vérifie si la case sélectionnée est vide
 int est_clic_reserve(POINT clic);	//vérifie si la case sélectionnée est dans la réserve correspondant à tour
 int est_clic_plateau(POINT clic);	//vérifie si la case sélectionnée est dans le plateau
+int est_clic1_valide();
+int est_clic2_valide();
+int est_coup_valide(COUP coup_courant);
+void identifier_cases_accessibles(NUMBOX depart);
+int est_case_accessible(NUMBOX destination);
+int explorer_case(NUMBOX curseur);
+int est_case_dans_le_plateau(NUMBOX curseur);
+void applique_coup(COUP coup);
+void choix_seconde_capture();
+int nombre_pions_joueur(JOUEUR joueur);
 
 //Vue
 void affiche_plateau_debug();
@@ -112,12 +133,15 @@ void efface_pion(SDL_Surface* screen,NUMBOX NB);
 void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry); //Affichage des pseudos, type de partie
 void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2);
 void affiche_tour(SDL_Surface* screen);
+void affiche_coup(COUP coup, SDL_Surface* screen);
 
 //Controleur
 void wait_esc(SDL_Surface*);
 POINT wait_clic(SDL_Surface* screen);
 POINT numbox_to_point(NUMBOX NB);
 NUMBOX point_to_numbox(POINT P);
+void quitter(SDL_Surface* screen);
+POINT event_to_point(SDL_Event event);
 
 //     MAIN     ///////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]){
@@ -172,8 +196,70 @@ int main(int argc, char *argv[]){
 	SDL_Flip(screen);
 	//TOURS
 	
-	POINT clic1; POINT clic2; NUMBOX NB1; NUMBOX NB2; int k; k=0;
+	SDL_Event input;
+	POINT clic1; 
+	POINT clic2; 
+	NUMBOX NB1; 
+	NUMBOX NB2; 
+	COUP coup_courant;
+	int k; k=0; // partie en cours si k = 0, partie terminée si k = 1
 	
+	while (k==0){
+				printf("J%d \n", TOUR);
+		do{
+			do{
+				SDL_WaitEvent(&input);
+				if(input.type == SDL_QUIT || (input.type == SDL_KEYDOWN && input.key.keysym.sym == SDLK_ESCAPE)){
+					k=1;
+				 	quitter(screen);
+				}else if(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT){
+					printf("est un clic\n");
+					clic1=event_to_point(input);
+					printf("clic1 %d %d \n",clic1.x,clic1.y);
+
+				}
+			}while(k==0 && !est_clic1_valide(clic1));
+			do{
+				SDL_WaitEvent(&input);
+				/*if(input.type == SDL_QUIT || (input.type == SDL_KEYDOWN && input.key.keysym.sym == SDLK_ESCAPE)){
+					k=1;
+					quitter(screen);
+				}else*/ if(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT){
+					clic2=event_to_point(input);
+					printf("clic2 %d %d \n",clic2.x,clic2.y);
+
+
+				}
+			}while(k==0 && !est_clic_plateau(clic2));
+
+			if(!est_clic_plateau(clic1)){
+				coup_courant.arrivee = point_to_numbox(clic2);
+				coup_courant.typeCoup = 1;
+				printf("type 1\n");
+			}else{
+				coup_courant.depart = point_to_numbox(clic1);
+				coup_courant.arrivee = point_to_numbox(clic2);
+				coup_courant.typeCoup = 0;
+				printf("type 0\n");
+			}
+			printf("coup cree\n");
+			printf("%d\n",est_coup_valide(coup_courant));
+
+		}while(k==0 && !est_coup_valide(coup_courant));
+
+		applique_coup(coup_courant);
+		printf("applique\n");
+		affiche_coup(coup_courant, screen);
+		printf("affiche\n");
+		if(coup_courant.typeCoup == 0){
+			if(TOUR == 1){
+				J1.dernierCoup = coup_courant;
+			}else{
+				J2.dernierCoup = coup_courant;
+			}
+		}
+	}
+
 	while (k==0)
 	{	
 		printf("J%d \n", TOUR);
@@ -211,15 +297,13 @@ int main(int argc, char *argv[]){
 		alterne_tour();
 		affiche_tour(screen);
 	}	
-		
-		wait_esc(screen);
 		printf("Quit Jeu\n");
 		return 0;
 	}
 }
 
 void WindowsNameIcon(SDL_Surface* screen){ //Donne un nom à la fenêtre SDL et définie un icone (32x32 format bmp) au programme
-	SDL_Surface *icon = NULL;
+	SDL_Surface *icon = NULL;	
 
 	icon = SDL_LoadBMP("Images/Yote.bmp");
 	SDL_WM_SetIcon(icon, NULL);
@@ -1077,10 +1161,232 @@ int est_clic_plateau(POINT clic){
 	return bool;
 }
 
-void prendre_reserve(){
+int est_clic1_valide(POINT clic1, int TOUR){
+	int validite;
+	validite = 0;
+
+	if(est_clic_reserve(clic1)){
+		validite = 1;
+	}
+	if(est_clic_plateau(clic1)){
+		NUMBOX depart;
+		depart = point_to_numbox(clic1);
+
+		if(!est_case_vide(depart) && est_case_j(depart)){
+			validite = 1;
+		}
+	}
+	return validite;
+}
+
+int est_clic2_valide(POINT clic2, int TOUR){
+	int validite;
+	validite = 0;
+
+	if(est_clic_plateau(clic2)){
+		NUMBOX arrivee;
+		arrivee = point_to_numbox(clic2);
+
+		if (est_case_vide(arrivee)){
+			validite = 1;
+		}
+	}
+}
+
+int est_coup_valide(COUP coup){
+	int validite;
+	validite = 1;
+
+	printf("check :\n");
+
+	if(!est_case_vide(coup.arrivee)){
+		validite = 0;
+		printf("0\n");
+	}
+
+	if(coup.typeCoup == 0){
+		if(est_case_vide(coup.depart)){
+			validite = 0;
+			printf("1\n");
+		}
+
+		if(!est_case_j(coup.depart)){
+			validite = 0;
+			printf("2\n");
+		}
+		if(!est_case_accessible(coup.arrivee)){
+			validite = 0;
+			printf("3\n");
+		}
+
+		if((TOUR == 1) && (J1.dernierCoup.depart.c == coup.arrivee.c && J1.dernierCoup.depart.c == coup.arrivee.c && J1.dernierCoup.arrivee.l == coup.depart.l && J1.dernierCoup.arrivee.c == coup.depart.c)){
+			validite = 0;
+			printf("4\n");
+		}
+	}
+	return validite;
+}
+
+int est_coup_capture(COUP coup){
+	return(abs((coup.depart.l+coup.depart.c)-(coup.arrivee.l+coup.arrivee.c)) == 2);
+}
+
+NUMBOX pion_capture(COUP coup){
+	NUMBOX pion;
+	pion.c = coup.depart.c;
+	pion.l = coup.depart.l;
+
+	if(coup.depart.c > coup.arrivee.c){
+		pion.c++;
+	}else if(coup.depart.l > coup.arrivee.l){
+		pion.l++;
+	}else if(coup.depart.c < coup.arrivee.c){
+		pion.c--;
+	}else if(coup.depart.l < coup.arrivee.l){
+		pion.l--;
+	}
+
+	return pion;
+}
+
+void identifier_cases_accessibles(NUMBOX depart){
+	NUMBOX curseur;
+	curseur.l = depart.l+1;
+	curseur.c = depart.c;
+	if(explorer_case(curseur)){
+		curseur.l = depart.l+2;
+		curseur.c = depart.c;
+		explorer_case(curseur);
+	}
+
+	curseur.l = depart.l-1;
+	curseur.c = depart.c;
+	if(explorer_case(curseur)){
+		curseur.l = depart.l-2;
+		curseur.c = depart.c;
+		explorer_case(curseur);
+	}
+
+	curseur.l = depart.l;
+	curseur.c = depart.c+1;
+	if(explorer_case(curseur)){
+		curseur.l = depart.l;
+		curseur.c = depart.c+2;
+		explorer_case(curseur);
+	}
+
+	curseur.l = depart.l;
+	curseur.c = depart.c-1;
+	if(explorer_case(curseur)){
+		curseur.l = depart.l;
+		curseur.c = depart.c-2;
+		explorer_case(curseur);
+	}
+}
+
+int explorer_case(NUMBOX curseur){
+	int continuer;
+	continuer = 1; 
+	/* le marqueur continuer indique à la fonction identifier_cases_accessibles
+	 si elle doit explorer la seconde case dans cette direction,
+	 si la première case rencontrée est vide ou un de nos pions, on ne continue pas.*/
+
+	if(est_case_dans_le_plateau(curseur)){
+		if (est_case_vide(curseur)){
+			plateau[curseur.l][curseur.c].Accessible = 1;
+			continuer = 0;
+		}else if(est_case_j(curseur)){
+			continuer = 0;
+		}
+	}
+
+	return continuer;
+}
+
+int est_case_accessible(NUMBOX destination){
+	return (plateau[destination.l][destination.c].Accessible == 1);
+}
+
+int est_case_dans_le_plateau(NUMBOX box){
+	int dansPlateau;
+	dansPlateau = 0;
+
+	if(box.l >= 0 && box.l < 6 && box.c >= 0 && box.c < 5){
+		dansPlateau = 1;
+	}
+
+	return dansPlateau;
+}
+
+void applique_coup(COUP coup){
+	if(coup.typeCoup == 0){
+		deplacer_pion(coup.depart,coup.arrivee);
+		if(est_coup_capture(coup)){
+			retirer_pion(pion_capture(coup));
+			choix_seconde_capture();
+		}
+	}else{
+		placer_pion(coup.arrivee);
+	}
+}
+
+void choix_seconde_capture(){
+	SDL_Event input;
+	POINT clic;
+	do{
+		SDL_WaitEvent(&input);
+		if(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT){
+			clic.x = input.button.x;
+			clic.y = input.button.y;
+		}
+
+	}while(!est_clic_plateau(clic) && !est_clic_reserve(clic));
+
+	if(est_clic_plateau(clic)){
+		NUMBOX seconde_capture;
+		seconde_capture = point_to_numbox(clic);
+
+		if(!est_case_vide(seconde_capture) && !est_case_j(seconde_capture)){
+			retirer_pion(seconde_capture);
+		}
+	}else{
+		if(TOUR == 1){
+			if(nombre_pions_joueur(J2) == 0){
+				prendre_reserve(2);
+			}
+		}else{
+			if(nombre_pions_joueur(J1) == 0){
+				prendre_reserve(1);
+			}
+		}
+	}
+
+}
+
+int nombre_pions_joueur(JOUEUR joueur){
+	int compte;
+	compte = 0;
+	int i;
+	int j;
+
+	for (int i = 0; i < 5; i++){
+		for (int j = 0; j < 6; j++)
+		{
+			if(plateau[j][i].coulP == joueur.coulj){
+				compte++;
+			}
+		}
+	}
+	return compte;
+}
+
+void prendre_reserve(int joueur){
 	
-	if (TOUR==1) J1.reserve=J1.reserve-1;
-	else J2.reserve=J2.reserve-1;
+	if(joueur == 1){
+		J1.reserve--;
+	}else if(joueur == 2){
+		J2.reserve--;
+	}
 }
 
 int est_case_vide(NUMBOX NB)
@@ -1127,12 +1433,25 @@ void wait_esc(SDL_Surface* screen){
 		if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
 		{
 			//Free
-			TTF_Quit();
-			SDL_FreeSurface(screen);
-			SDL_Quit();
+			quitter(screen);
 			esc = 1;
 		}
 	}
+}
+
+void quitter(SDL_Surface* screen){
+	TTF_Quit();
+	SDL_FreeSurface(screen);
+	SDL_Quit();
+}
+
+POINT event_to_point(SDL_Event event){
+	POINT clic;
+
+	clic.x = event.button.x;
+	clic.y = event.button.y;
+
+	return clic;
 }
 
 POINT wait_clic(SDL_Surface* screen){
@@ -1327,4 +1646,16 @@ void affiche_tour(SDL_Surface* screen){
 	}
 	
 	SDL_Flip(screen);
+}
+
+void affiche_coup(COUP coup, SDL_Surface* screen){
+	if(coup.typeCoup == 1){
+		affiche_pion(screen, coup.arrivee);
+	}else{
+		if(est_coup_capture(coup)){
+			efface_pion(screen,pion_capture(coup));
+		}
+		efface_pion(screen, coup.depart);
+		affiche_pion(screen, coup.arrivee);
+	}
 }

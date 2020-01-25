@@ -117,6 +117,7 @@ int est_clic1_valide();
 int est_clic2_valide();
 int est_coup_valide(COUP coup_courant);
 int est_coup_capture(COUP coup);
+int est_coup_inverse(COUP coup1, COUP coup2);
 void identifier_cases_accessibles(NUMBOX depart);
 void reinitialiser_cases_accessibles();
 int est_case_accessible(NUMBOX destination);
@@ -252,6 +253,7 @@ int main(int argc, char *argv[]){
 		applique_coup(coup_courant);
 		printf("applique\n");
 		affiche_coup(coup_courant, screen);
+		SDL_Flip(screen);
 		if(est_coup_capture(coup_courant)){
 			do{
 				SDL_WaitEvent(&input);
@@ -262,26 +264,26 @@ int main(int argc, char *argv[]){
 				if(!est_case_vide(seconde_capture) && !est_case_j(seconde_capture)){
 					retirer_pion(seconde_capture);
 					efface_pion(screen, seconde_capture);
+					SDL_Flip(screen);
 				}else if(est_clic_reserve(clic1)){
-					if(TOUR == 1 && nombre_pions_joueur(J1) == 0){
-						prendre_reserve(J1);
-					}else if(TOUR == 2 && nombre_pions_joueur(J2) == 0){
-						prendre_reserve(J2);
+					if(TOUR == 1 && nombre_pions_joueur(J2) == 0){
+						prendre_reserve(2);
+					}else if(TOUR == 2 && nombre_pions_joueur(J1) == 0){
+						prendre_reserve(1);
 					}
 				}
 			}
 		}
 		printf("affiche\n");
-		if(coup_courant.typeCoup == 0){
-			if(TOUR == 1){
-				J1.dernierCoup = coup_courant;
-			}else{
-				J2.dernierCoup = coup_courant;
-			}
+		if(TOUR == 1){
+			J1.dernierCoup = coup_courant;
+		}else{
+			J2.dernierCoup = coup_courant;
 		}
 		alterne_tour();
 		affiche_tour(screen);
 		affiche_reserve(screen, J1, J2);
+		SDL_Flip(screen);
 	}
 		quitter(screen);
 		printf("Quit Jeu\n");
@@ -1208,10 +1210,10 @@ int est_coup_valide(COUP coup){
 			printf("3\n");
 		}
 
-		if((TOUR == 1) && (J1.dernierCoup.depart.c == coup.arrivee.c && J1.dernierCoup.depart.c == coup.arrivee.c && J1.dernierCoup.arrivee.l == coup.depart.l && J1.dernierCoup.arrivee.c == coup.depart.c)){
+		if((TOUR == 1) && (est_coup_inverse(coup,J1.dernierCoup))){
 			validite = 0;
 			printf("4\n");
-		}else if((TOUR == 2) && (J2.dernierCoup.depart.c == coup.arrivee.c && J2.dernierCoup.depart.c == coup.arrivee.c && J2.dernierCoup.arrivee.l == coup.depart.l && J2.dernierCoup.arrivee.c == coup.depart.c)){
+		}else if((TOUR == 2) && (est_coup_inverse(coup,J2.dernierCoup))){
 			validite = 0;
 
 			printf("5\n");
@@ -1225,6 +1227,14 @@ int est_coup_valide(COUP coup){
 		reinitialiser_cases_accessibles();
 	}
 	return validite;
+}
+
+int est_coup_inverse(COUP coup1, COUP coup2){
+	return(
+		coup1.depart.c == coup2.arrivee.c &&
+		coup1.depart.l == coup2.arrivee.l &&
+		coup1.arrivee.l == coup2.depart.l &&
+		coup1.arrivee.c == coup2.depart.c);
 }
 
 int est_coup_capture(COUP coup){
@@ -1346,6 +1356,7 @@ void applique_coup(COUP coup){
 		}
 	}else{
 		placer_pion(coup.arrivee);
+		prendre_reserve(TOUR);
 	}
 }
 
@@ -1521,8 +1532,6 @@ void affiche_pion(SDL_Surface* screen,NUMBOX NB){
 	
 	if (TOUR==1) {DrawRectangle(screen,HG.x,HG.y,80,80,255,0,255);}
 	else {DrawRectangle(screen,HG.x,HG.y,80,80,0,255,255);}
-	
-	SDL_Flip(screen);
 }
 
 void efface_pion(SDL_Surface* screen,NUMBOX NB){
@@ -1534,8 +1543,6 @@ void efface_pion(SDL_Surface* screen,NUMBOX NB){
 	HG.y=HG.y+1;
 	
 	DrawRectangle(screen,HG.x,HG.y,99,99,50,50,50);
-	
-	SDL_Flip(screen);
 }
 
 void affiche_plateau_debug(){
@@ -1662,8 +1669,6 @@ void affiche_tour(SDL_Surface* screen){
 		DrawRectangle(screen,850,8,40,40,50,50,50);
 		DrawRectangle(screen,850,458,35,35,0,255,255);
 	}
-	
-	SDL_Flip(screen);
 }
 
 void affiche_coup(COUP coup, SDL_Surface* screen){

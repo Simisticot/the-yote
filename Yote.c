@@ -105,7 +105,7 @@ COUL premier_joueur();
 void placer_pion(NUMBOX position);
 void retirer_pion(NUMBOX position);
 void deplacer_pion(NUMBOX depart, NUMBOX destination);
-
+COUP coup_IA();
 void alterne_tour();				//change la valeur de tour {1;2}
 void init_J1vsJ2();					//initialise les variables J1 et J2
 void prendre_reserve();				//réduit la réserve correspondante à tour
@@ -209,46 +209,50 @@ int main(int argc, char *argv[]){
 	int k; k=0; // partie en cours si k = 0, partie terminée si k = 1
 	
 	while (k==0){
-				printf("J%d \n", TOUR);
-		do{
+		printf("J%d \n", TOUR);
+		if(gameEntry.playerNumber == 1 && TOUR == 2){
+			coup_courant == coup_IA();
+		}else{
 			do{
 				do{
-					SDL_WaitEvent(&input);
-					if(input.type == SDL_QUIT || (input.type == SDL_KEYDOWN && input.key.keysym.sym == SDLK_ESCAPE)){
-						k=1;
-					}
-				}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT) && k==0);
-				printf("est un clic\n");
-				clic1=event_to_point(input);
-				printf("clic1 %d %d \n",clic1.x,clic1.y);
+					do{
+						SDL_WaitEvent(&input);
+						if(input.type == SDL_QUIT || (input.type == SDL_KEYDOWN && input.key.keysym.sym == SDLK_ESCAPE)){
+							k=1;
+						}
+					}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT) && k==0);
+					printf("est un clic\n");
+					clic1=event_to_point(input);
+					printf("clic1 %d %d \n",clic1.x,clic1.y);
 
-			}while(k==0 && !est_clic1_valide(clic1));
-			do{
+				}while(k==0 && !est_clic1_valide(clic1));
 				do{
-					SDL_WaitEvent(&input);
-					if(input.type == SDL_QUIT || (input.type == SDL_KEYDOWN && input.key.keysym.sym == SDLK_ESCAPE)){
-						k=1;
-					}
-				}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT) && k==0);
-				clic2=event_to_point(input);
-				printf("clic2 %d %d \n",clic2.x,clic2.y);
+					do{
+						SDL_WaitEvent(&input);
+						if(input.type == SDL_QUIT || (input.type == SDL_KEYDOWN && input.key.keysym.sym == SDLK_ESCAPE)){
+							k=1;
+						}
+					}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT) && k==0);
+					clic2=event_to_point(input);
+					printf("clic2 %d %d \n",clic2.x,clic2.y);
 
-			}while(k==0 && !est_clic_plateau(clic2));
+				}while(k==0 && !est_clic_plateau(clic2));
 
-			if(!est_clic_plateau(clic1)){
-				coup_courant.arrivee = point_to_numbox(clic2);
-				coup_courant.typeCoup = 1;
-				printf("type 1\n");
-			}else{
-				coup_courant.depart = point_to_numbox(clic1);
-				coup_courant.arrivee = point_to_numbox(clic2);
-				coup_courant.typeCoup = 0;
-				printf("type 0\n");
-			}
-			printf("coup cree\n");
-			printf("%d\n",est_coup_valide(coup_courant));
+				if(!est_clic_plateau(clic1)){
+					coup_courant.arrivee = point_to_numbox(clic2);
+					coup_courant.typeCoup = 1;
+					printf("type 1\n");
+				}else{
+					coup_courant.depart = point_to_numbox(clic1);
+					coup_courant.arrivee = point_to_numbox(clic2);
+					coup_courant.typeCoup = 0;
+					printf("type 0\n");
+				}
+				printf("coup cree\n");
+				printf("%d\n",est_coup_valide(coup_courant));
 
-		}while(k==0 && !est_coup_valide(coup_courant));
+			}while(k==0 && !est_coup_valide(coup_courant));
+		}
 
 		if(k==0){
 			applique_coup(coup_courant);

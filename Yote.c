@@ -59,6 +59,7 @@ typedef struct COUP COUP;
 
 struct JOUEUR{
 	int reserve;	/*[0;12]*/
+	int score;
 	COUL coulj;     //?
 	COUP dernierCoup;
 };
@@ -98,6 +99,7 @@ void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]); //Vue
 void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int); //Vue
 SDL_Color GetPixelColor(SDL_Surface*,int,int); //Controleur
 void lastCharDel(char*); //Controleur
+int partie_terminee(GameEntry gameEntry, int nombre_tours);
 
 //Modèle
 void init_plateau();
@@ -135,6 +137,7 @@ void choix_seconde_capture();
 int nombre_pions_joueur(JOUEUR joueur);
 
 //Vue
+void affiche_score();
 void affiche_plateau_debug();
 void affiche_plateau(SDL_Surface* screen);
 
@@ -193,7 +196,7 @@ int main(int argc, char *argv[]){
 		return 0;
 	} else {
 		Fond(screen);
-		
+
 	//INITIALISATION
 	init_J1vsJ2(J1,J2);
 	init_plateau();
@@ -214,7 +217,12 @@ int main(int argc, char *argv[]){
 	NUMBOX NB2; 
 	NUMBOX random;
 	COUP coup_courant;
+	int nombre_tours;
+
 	int k; k=0; // partie en cours si k = 0, partie terminée si k = 1
+	nombre_tours = 0;
+	J1.score = 0;
+	J2.score = 0;
 	
 	while (k==0){
 		printf("J%d \n", TOUR);
@@ -282,16 +290,22 @@ int main(int argc, char *argv[]){
 				seconde_capture=point_to_numbox(clic1);
 				if(!est_case_vide(seconde_capture) && !est_case_j(seconde_capture)){
 					retirer_pion(seconde_capture);
+					if(TOUR==1){
+						J1.score++;
+					}else{
+						J2.score++;
+					}
 					efface_pion(screen, seconde_capture);
 					SDL_Flip(screen);
 				}
 			}else if(est_clic_reserve(clic1)){
 
-				if(TOUR == 1 && nombre_pions_joueur(J1) == 0){
-					prendre_reserve(1);
-					printf("prise dans reserve 1\n");
-				}else if(TOUR == 2 && nombre_pions_joueur(J2) == 0){
+				if(TOUR == 1 && nombre_pions_joueur(J2) == 0){
 					prendre_reserve(2);
+					printf("prise dans reserve 1\n");
+					J2.score++;
+				}else if(TOUR == 2 && nombre_pions_joueur(J1) == 0){
+					prendre_reserve(1);
 					printf("prise dans reserve 2\n");
 				}
 			}
@@ -308,8 +322,15 @@ int main(int argc, char *argv[]){
 		}else{
 			J2.dernierCoup = coup_courant;
 		}
+
+		if(partie_terminee(gameEntry,nombre_tours)){
+			printf("partie_terminee %d\n", partie_terminee(gameEntry,nombre_tours));
+		}
+
 		alterne_tour();
 		affiche_tour(screen);
+		nombre_tours++;
+		printf("tour n°%d score J1 = %d Score J2 = %d\n",nombre_tours,J1.score,J2.score);
 		affiche_reserve(screen, J1, J2);
 		SDL_Flip(screen);
 		printf("J1 : %d pions\n", nombre_pions_joueur(J1));
@@ -1584,6 +1605,11 @@ void applique_coup(COUP coup){
 		deplacer_pion(coup.depart,coup.arrivee);
 		if(est_coup_capture(coup)){
 			retirer_pion(pion_capture(coup));
+			if(TOUR==1){
+				J1.score++;
+			}else{
+				J2.score++;
+			}
 		}
 	}else{
 		placer_pion(coup.arrivee);
@@ -1753,6 +1779,30 @@ POINT numbox_to_point(NUMBOX NB)
 
 //Vue
 
+void affiche_score(SDL_Surface* screen){    //Affiche le score des joueurs
+
+    TTF_Font *police=NULL;
+    int w, h;
+    char text[5];
+
+    police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",80);
+
+    //Affichage du score du joueur 1
+    sprintf(text," %d ",J1.score);
+    TTF_SizeText(police,text,&w,&h);
+    DrawTextShaded(screen,700,80,"Polices/LibreBaskerville-Regular.ttf",80,255,255,255,text,50,50,50);
+
+    //Affichage du score du joueur 2
+    sprintf(text," %d ",J2.score);
+    TTF_SizeText(police,text,&w,&h);
+    DrawTextShaded(screen,700,530,"Polices/LibreBaskerville-Regular.ttf",80,255,255,255,text,50,50,50);
+
+    SDL_Flip(screen);
+    TTF_CloseFont(police);
+    SDL_Flip(screen);
+}
+
+
 void affiche_pion(SDL_Surface* screen,NUMBOX NB){
 	
 	POINT HG;
@@ -1912,4 +1962,31 @@ void affiche_coup(COUP coup, SDL_Surface* screen){
 		efface_pion(screen, coup.depart);
 		affiche_pion(screen, coup.arrivee);
 	}
+}
+
+int partie_terminee(GameEntry gameEntry, int nombre_tours)
+{
+    if (nombre_tours == 0){
+        return 0;
+    }else{
+        if(gameEntry.gameMode == 1){
+            if(nombre_pions_joueur(J1) == 0){
+                return 2;
+            }
+            if(nombre_pions_joueur(J2) == 0){
+                return 1;
+            }
+            return 0;
+        }
+        if(gameEntry.gameMode == 2){
+            if(nombre_pions_joueur(J1) == 0 && J1.reserve == 0){
+                return 2;
+            }
+            if(nombre_pions_joueur(J2) == 0 && J2.reserve == 0){
+                return 1;
+            }
+
+            return 0;
+        }
+    }
 }

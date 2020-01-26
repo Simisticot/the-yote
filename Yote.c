@@ -106,7 +106,11 @@ void placer_pion(NUMBOX position);
 void retirer_pion(NUMBOX position);
 void deplacer_pion(NUMBOX depart, NUMBOX destination);
 COUP coup_IA();
+NUMBOX pion_jouable_aleatoire(JOUEUR Joueur);
 NUMBOX pion_aleatoire(JOUEUR Joueur);
+int choix_type_coup(JOUEUR Joueur);
+NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur);
+NUMBOX case_vide_aleatoire();
 int peut_pion_bouger(NUMBOX pion, JOUEUR Joueur);
 int nombre_pions_jouables(JOUEUR Joueur);
 void alterne_tour();				//change la valeur de tour {1;2}
@@ -214,9 +218,9 @@ int main(int argc, char *argv[]){
 	
 	while (k==0){
 		printf("J%d \n", TOUR);
-	//	if(gameEntry.playerNumber == 1 && TOUR == 2){
-	//		coup_courant == coup_IA();
-	//	}else{
+		if(gameEntry.playerNumber == 1 && TOUR == 2){
+			coup_courant = coup_IA();
+		}else{
 			do{
 				do{
 					do{
@@ -256,7 +260,11 @@ int main(int argc, char *argv[]){
 				printf("%d\n",est_coup_valide(coup_courant));
 
 			}while(k==0 && !est_coup_valide(coup_courant));
-		//}
+		}
+
+		printf("coup selectionne\n");
+		printf("Coup courant : %d c ; %d l to %d c ; %d l\n",coup_courant.depart.c, coup_courant.depart.l, coup_courant.arrivee.c, coup_courant.arrivee.l);
+
 
 		if(k==0){
 			applique_coup(coup_courant);
@@ -265,9 +273,7 @@ int main(int argc, char *argv[]){
 			SDL_Flip(screen);
 		}
 
-		alterne_tour();
-
-		if(est_coup_capture(coup_courant)){
+		if(est_coup_capture(coup_courant) && (gameEntry.playerNumber == 2 || TOUR == 1)){
 			do{
 				SDL_WaitEvent(&input);
 			}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT) && k==0);
@@ -289,6 +295,12 @@ int main(int argc, char *argv[]){
 					printf("prise dans reserve 2\n");
 				}
 			}
+		}else if(est_coup_capture(coup_courant) && gameEntry.playerNumber == 1 && TOUR == 2){
+			if(nombre_pions_joueur(J1) > 0){
+				retirer_pion(pion_aleatoire(J1));
+			}else{
+				prendre_reserve(1);
+			}
 		}
 		printf("affiche\n");
 		if(TOUR == 1){
@@ -296,14 +308,13 @@ int main(int argc, char *argv[]){
 		}else{
 			J2.dernierCoup = coup_courant;
 		}
+		alterne_tour();
 		affiche_tour(screen);
 		affiche_reserve(screen, J1, J2);
 		SDL_Flip(screen);
 		printf("J1 : %d pions\n", nombre_pions_joueur(J1));
 		printf("J2 : %d pions\n", nombre_pions_joueur(J2));
 		affiche_plateau_debug();
-		random = pion_aleatoire(J1);
-		printf("%d : %d\n", random.c, random.l);
 		printf("Pions jouables joueur 1 : %d\n", nombre_pions_jouables(J1));
 		printf("Pions jouables joueur 2 : %d\n", nombre_pions_jouables(J2));
 
@@ -1180,17 +1191,133 @@ int nombre_pions_jouables(JOUEUR Joueur){
 	return compte;
 }
 
-COUP coupIA(){
+COUP coup_IA(JOUEUR Joueur){
 
+	COUP coup;
+	printf("choix type\n");
+	coup.typeCoup = choix_type_coup(Joueur);
+	if(coup.typeCoup == 0){
+		printf("choix pion jouable\n");
+		coup.depart = pion_jouable_aleatoire(Joueur);
+		printf("choix destination\n");
+		coup.arrivee = destination_aleatoire(coup.depart,Joueur);
+		printf("coup.arrivee.c = %d \n", coup.arrivee.c);
+		printf("coup.arrivee.l = %d \n", coup.arrivee.l);
+	}else{
+		printf("choix position nouveau pion\n");
+		coup.arrivee = case_vide_aleatoire();
+	}
+
+	return coup;
+}
+
+NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur){
+	srand(time(NULL));
+	NUMBOX destinationsPossibles[20];
+	NUMBOX curseur;
+	COUP coupPotentiel;
+	identifier_cases_accessibles(pion);
+	int n;
+	int h;
+	h = 0;
+
+	for (int i = 0; i < 4; i++){
+		for (int j = 0; j < 5; j++){
+			printf("iteration d\n");
+			if(plateau[j][i].Accessible == 1){
+				printf("case accessible\n");
+				curseur.c = i;
+				curseur.l = j;
+
+				coupPotentiel.depart = pion;
+				coupPotentiel.arrivee = curseur;
+
+				if(!est_coup_inverse(coupPotentiel, Joueur.dernierCoup)){
+					printf("destination possible\n");
+					destinationsPossibles[h] = curseur;
+					h++;
+					printf("h = %d\n",h );
+				}
+			}
+		}
+	}
+	printf("boucle terminee\n");
+	if(h > 1){
+		printf("h>1\n");
+		n = rand()%h;
+		printf("n = %d\n",n);
+		curseur = destinationsPossibles[h];
+		printf("curseur assigne\n");
+	}else{
+		printf("h<=1\n");
+		curseur = destinationsPossibles[0];
+		printf("curseur assigne 2\n");
+	}
+
+	reinitialiser_cases_accessibles();
+	printf("cases accessibles reinitialisees\n");
+	return curseur;
+}
+
+NUMBOX case_vide_aleatoire(){
+	srand(time(NULL));
+	NUMBOX curseur;
+
+	do{
+		curseur.c = rand()%5;
+		curseur.l = rand()%6;
+	}while(!est_case_vide(curseur));
+
+	return curseur;
 }
 
 int choix_type_coup(JOUEUR Joueur){
-	
+	int choix;
+	srand(time(NULL));
+
+	if(nombre_pions_jouables(Joueur)>0){
+		choix = rand()%2;
+	}else{
+		choix = 1;
+	}
+	return choix;
 }
 
 NUMBOX pion_jouable_aleatoire(JOUEUR Joueur){
 	NUMBOX pionChoisi;
 	NUMBOX candidat;
+	srand(time(NULL));
+	int numeroPion;
+
+	printf("roll numero pion\n");
+	numeroPion = rand()%nombre_pions_jouables(Joueur);
+	numeroPion++;
+	printf("numero pion = %d\n", numeroPion);
+
+
+	for (int i = 0; i < 5; i++){
+		for (int j = 0; j < 6; j++){
+			printf("iteration\n");
+			if(plateau[j][i].typeP == PION && plateau[j][i].coulP == Joueur.coulj){
+				printf("candidat trouve\n");
+				candidat.c = i;
+				candidat.l = j;
+				if(peut_pion_bouger(candidat, Joueur)){
+					printf("candidat peut bouger\n");
+					numeroPion--;
+					if(numeroPion == 0){
+						printf("candidat choisi\n");
+						pionChoisi = candidat;
+					}
+				}
+			}
+		}
+	}
+	return pionChoisi;
+}
+
+NUMBOX pion_aleatoire(JOUEUR Joueur){
+	NUMBOX pionChoisi;
 	srand(time(NULL));
 	int numeroPion;
 
@@ -1202,13 +1329,10 @@ NUMBOX pion_jouable_aleatoire(JOUEUR Joueur){
 	for (int i = 0; i < 5; i++){
 		for (int j = 0; j < 6; j++){
 			if(plateau[j][i].typeP == PION && plateau[j][i].coulP == Joueur.coulj){
-				candidat.c = i;
-				candidat.l = j;
-				if(peut_pion_bouger(candidat)){
-					numeroPion--;
-					if(numeroPion == 0){
-						pionChoisi = candidat;
-					}
+				numeroPion--;
+				if(numeroPion == 0){
+					pionChoisi.c = i;
+					pionChoisi.l = j;
 				}
 			}
 		}
@@ -1235,16 +1359,10 @@ int est_clic_reserve(POINT clic){
 	int bool;
 	bool=0;
 	
-	if (TOUR==1){
-		
-		if (600<clic.x && clic.x<900 && 200<clic.y && clic.y<250 && J1.reserve>0)
-		{bool=1;}
-			
-	}else{
-		
-		if (600<clic.x && clic.x<900 && 650<clic.y && clic.y<700 && J2.reserve>0)
+	if (600<clic.x && clic.x<900 && (650<clic.y && clic.y<700 || 200<clic.y && clic.y<250)){
 		{bool=1;}
 	}
+
 	return bool;
 }
 
@@ -1261,9 +1379,10 @@ int est_clic_plateau(POINT clic){
 int est_clic1_valide(POINT clic1, int TOUR){
 	int validite;
 	validite = 0;
-
+	printf("check clic1 :\n");
 	if(est_clic_reserve(clic1)){
 		validite = 1;
+		printf("0\n");
 	}
 	if(est_clic_plateau(clic1)){
 		NUMBOX depart;
@@ -1271,6 +1390,7 @@ int est_clic1_valide(POINT clic1, int TOUR){
 
 		if(!est_case_vide(depart) && est_case_j(depart)){
 			validite = 1;
+			printf("1\n");
 		}
 	}
 	return validite;

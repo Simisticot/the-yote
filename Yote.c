@@ -110,7 +110,7 @@ void affiche_plateau(SDL_Surface* screen);
 void affiche_pion(SDL_Surface* screen,NUMBOX NB);
 void efface_pion(SDL_Surface* screen,NUMBOX NB);
 void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry); //Affichage des pseudos et du type de partie
-void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2);	//Affiche le nombre restant de pion dans la réserve des deux joueurs
+void affiche_reserve(SDL_Surface* screen);	//Affiche le nombre restant de pion dans la réserve des deux joueurs
 void affiche_tour(SDL_Surface* screen);		//Affiche un carré près du pseudo du joueurs en cours
 
 //Controleur
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]){
 	init_plateau();
 	affiche_plateau(screen);
 	affichage_info_jeu(screen, &gameEntry);
-	affiche_reserve(screen, J1, J2);
+	affiche_reserve(screen);
 	TOUR=1;
 	affiche_tour(screen);
 	
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]){
 			efface_pion(screen,NB1);
 		}
 		
-		affiche_reserve(screen, J1, J2);
+		affiche_reserve(screen);
 		affiche_pion(screen,NB2);
 		
 		affiche_plateau_debug();										//affichages terminaux
@@ -1293,7 +1293,7 @@ void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry){ //Affichage 
 	TTF_CloseFont(police);
 }
 
-void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2){ //Affiche le nombre restant de pion dans la réserve des deux joueurs
+void affiche_reserve(SDL_Surface* screen){ //Affiche le nombre restant de pion dans la réserve des deux joueurs
 
 	TTF_Font *police=NULL;
 	int w, h;

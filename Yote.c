@@ -250,14 +250,19 @@ int main(int argc, char *argv[]){
 
 		}while(k==0 && !est_coup_valide(coup_courant));
 
-		applique_coup(coup_courant);
-		printf("applique\n");
-		affiche_coup(coup_courant, screen);
-		SDL_Flip(screen);
+		if(k==0){
+			applique_coup(coup_courant);
+			printf("applique\n");
+			affiche_coup(coup_courant, screen);
+			SDL_Flip(screen);
+		}
+
+		alterne_tour();
+
 		if(est_coup_capture(coup_courant)){
 			do{
 				SDL_WaitEvent(&input);
-			}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT));
+			}while(!(input.type == SDL_MOUSEBUTTONDOWN && input.button.button == SDL_BUTTON_LEFT) && k==0);
 			clic1 = event_to_point(input);
 			if(est_clic_plateau(clic1)){
 				seconde_capture=point_to_numbox(clic1);
@@ -265,12 +270,15 @@ int main(int argc, char *argv[]){
 					retirer_pion(seconde_capture);
 					efface_pion(screen, seconde_capture);
 					SDL_Flip(screen);
-				}else if(est_clic_reserve(clic1)){
-					if(TOUR == 1 && nombre_pions_joueur(J2) == 0){
-						prendre_reserve(2);
-					}else if(TOUR == 2 && nombre_pions_joueur(J1) == 0){
-						prendre_reserve(1);
-					}
+				}
+			}else if(est_clic_reserve(clic1)){
+
+				if(TOUR == 1 && nombre_pions_joueur(J1) == 0){
+					prendre_reserve(1);
+					printf("prise dans reserve 1\n");
+				}else if(TOUR == 2 && nombre_pions_joueur(J2) == 0){
+					prendre_reserve(2);
+					printf("prise dans reserve 2\n");
 				}
 			}
 		}
@@ -280,10 +288,12 @@ int main(int argc, char *argv[]){
 		}else{
 			J2.dernierCoup = coup_courant;
 		}
-		alterne_tour();
 		affiche_tour(screen);
 		affiche_reserve(screen, J1, J2);
 		SDL_Flip(screen);
+		printf("J1 : %d pions\n", nombre_pions_joueur(J1));
+		printf("J2 : %d pions\n", nombre_pions_joueur(J2));
+		affiche_plateau_debug();
 	}
 		quitter(screen);
 		printf("Quit Jeu\n");
@@ -1238,7 +1248,7 @@ int est_coup_inverse(COUP coup1, COUP coup2){
 }
 
 int est_coup_capture(COUP coup){
-	return(abs((coup.depart.l+coup.depart.c)-(coup.arrivee.l+coup.arrivee.c)) == 2);
+	return(abs((coup.depart.l+coup.depart.c)-(coup.arrivee.l+coup.arrivee.c)) == 2 && coup.typeCoup == 0);
 }
 
 NUMBOX pion_capture(COUP coup){
@@ -1401,7 +1411,7 @@ int nombre_pions_joueur(JOUEUR joueur){
 	for (int i = 0; i < 5; i++){
 		for (int j = 0; j < 6; j++)
 		{
-			if(plateau[j][i].coulP == joueur.coulj){
+			if(plateau[j][i].typeP == PION && plateau[j][i].coulP == joueur.coulj){
 				compte++;
 			}
 		}

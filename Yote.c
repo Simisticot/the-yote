@@ -1221,9 +1221,11 @@ NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur){
 	int h;
 	h = 0;
 
-	for (int i = 0; i < 4; i++){
-		for (int j = 0; j < 5; j++){
+	for (int i = 0; i < 5; i++){
+		for (int j = 0; j < 6; j++){
 			printf("iteration d\n");
+			printf("i = %d\n",i );
+			printf("ij = %d\n",j );
 			if(plateau[j][i].Accessible == 1){
 				printf("case accessible\n");
 				curseur.c = i;
@@ -1234,6 +1236,7 @@ NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur){
 
 				if(!est_coup_inverse(coupPotentiel, Joueur.dernierCoup)){
 					printf("destination possible\n");
+					printf("destination\n");
 					destinationsPossibles[h] = curseur;
 					h++;
 					printf("h = %d\n",h );
@@ -1246,7 +1249,7 @@ NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur){
 		printf("h>1\n");
 		n = rand()%h;
 		printf("n = %d\n",n);
-		curseur = destinationsPossibles[h];
+		curseur = destinationsPossibles[n];
 		printf("curseur assigne\n");
 	}else{
 		printf("h<=1\n");

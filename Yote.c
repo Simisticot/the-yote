@@ -106,6 +106,9 @@ void placer_pion(NUMBOX position);
 void retirer_pion(NUMBOX position);
 void deplacer_pion(NUMBOX depart, NUMBOX destination);
 COUP coup_IA();
+NUMBOX pion_aleatoire(JOUEUR Joueur);
+int peut_pion_bouger(NUMBOX pion, JOUEUR Joueur);
+int nombre_pions_jouables(JOUEUR Joueur);
 void alterne_tour();				//change la valeur de tour {1;2}
 void init_J1vsJ2();					//initialise les variables J1 et J2
 void prendre_reserve();				//réduit la réserve correspondante à tour
@@ -205,14 +208,15 @@ int main(int argc, char *argv[]){
 	NUMBOX seconde_capture;
 	NUMBOX NB1; 
 	NUMBOX NB2; 
+	NUMBOX random;
 	COUP coup_courant;
 	int k; k=0; // partie en cours si k = 0, partie terminée si k = 1
 	
 	while (k==0){
 		printf("J%d \n", TOUR);
-		if(gameEntry.playerNumber == 1 && TOUR == 2){
-			coup_courant == coup_IA();
-		}else{
+	//	if(gameEntry.playerNumber == 1 && TOUR == 2){
+	//		coup_courant == coup_IA();
+	//	}else{
 			do{
 				do{
 					do{
@@ -252,7 +256,7 @@ int main(int argc, char *argv[]){
 				printf("%d\n",est_coup_valide(coup_courant));
 
 			}while(k==0 && !est_coup_valide(coup_courant));
-		}
+		//}
 
 		if(k==0){
 			applique_coup(coup_courant);
@@ -298,6 +302,11 @@ int main(int argc, char *argv[]){
 		printf("J1 : %d pions\n", nombre_pions_joueur(J1));
 		printf("J2 : %d pions\n", nombre_pions_joueur(J2));
 		affiche_plateau_debug();
+		random = pion_aleatoire(J1);
+		printf("%d : %d\n", random.c, random.l);
+		printf("Pions jouables joueur 1 : %d\n", nombre_pions_jouables(J1));
+		printf("Pions jouables joueur 2 : %d\n", nombre_pions_jouables(J2));
+
 	}
 		quitter(screen);
 		printf("Quit Jeu\n");
@@ -1120,6 +1129,91 @@ void deplacer_pion(NUMBOX depart, NUMBOX destination){
 		if (TOUR==1) plateau[destination.l][destination.c].coulP = J1.coulj;
 		else plateau[destination.l][destination.c].coulP = J2.coulj;
 	}
+}
+
+int peut_pion_bouger(NUMBOX pion, JOUEUR Joueur){
+	
+	int peutBouger;
+	peutBouger = 0;
+	NUMBOX destination;
+	COUP mouvementPossible;
+	identifier_cases_accessibles(pion);
+
+	for (int i = 0; i < 5; i++){
+		for (int j = 0; j < 6; j++)
+		{
+			if(plateau[j][i].Accessible == 1){
+				destination.l = j;
+				destination.c = i;
+				mouvementPossible.depart = pion;
+				mouvementPossible.arrivee = destination;
+				if(!est_coup_inverse(mouvementPossible, Joueur.dernierCoup)){
+					peutBouger = 1;
+				}
+			}
+		}
+	}
+	reinitialiser_cases_accessibles();
+	return peutBouger;
+}
+
+int nombre_pions_jouables(JOUEUR Joueur){
+	int compte;
+	compte = 0;
+	NUMBOX pion;
+
+	if(nombre_pions_joueur(Joueur) > 0){
+		for (int i = 0; i < 5; i++){
+			for (int j = 0; j < 6; j++)
+			{
+				if(plateau[j][i].typeP == PION && plateau[j][i].coulP == Joueur.coulj){
+					pion.l = j;
+					pion.c = i;
+					if(peut_pion_bouger(pion, Joueur)){
+						compte++;
+					}
+				}
+			}
+		}
+	}
+
+	return compte;
+}
+
+COUP coupIA(){
+
+}
+
+int choix_type_coup(JOUEUR Joueur){
+	
+}
+
+NUMBOX pion_jouable_aleatoire(JOUEUR Joueur){
+	NUMBOX pionChoisi;
+	NUMBOX candidat;
+	srand(time(NULL));
+	int numeroPion;
+
+
+	numeroPion = rand()%nombre_pions_jouables(Joueur);
+	numeroPion++;
+
+
+	for (int i = 0; i < 5; i++){
+		for (int j = 0; j < 6; j++){
+			if(plateau[j][i].typeP == PION && plateau[j][i].coulP == Joueur.coulj){
+				candidat.c = i;
+				candidat.l = j;
+				if(peut_pion_bouger(candidat)){
+					numeroPion--;
+					if(numeroPion == 0){
+						pionChoisi = candidat;
+					}
+				}
+			}
+		}
+	}
+	return pionChoisi;
 }
 
 void retirer_pion(NUMBOX position){

@@ -112,6 +112,7 @@ void efface_pion(SDL_Surface* screen,NUMBOX NB);
 void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry); //Affichage des pseudos et du type de partie
 void affiche_reserve(SDL_Surface* screen);	//Affiche le nombre restant de pion dans la réserve des deux joueurs
 void affiche_tour(SDL_Surface* screen);		//Affiche un carré près du pseudo du joueurs en cours
+void affiche_score(SDL_Surface* screen);	//Affiche le score des joueur
 
 //Controleur
 void wait_esc(SDL_Surface*);
@@ -166,6 +167,7 @@ int main(int argc, char *argv[]){
 	affiche_plateau(screen);
 	affichage_info_jeu(screen, &gameEntry);
 	affiche_reserve(screen);
+	affiche_score(screen);
 	TOUR=1;
 	affiche_tour(screen);
 	
@@ -203,6 +205,7 @@ int main(int argc, char *argv[]){
 		}
 		
 		affiche_reserve(screen);
+		affiche_score(screen);
 		affiche_pion(screen,NB2);
 		
 		affiche_plateau_debug();										//affichages terminaux
@@ -1303,13 +1306,13 @@ void affiche_reserve(SDL_Surface* screen){ //Affiche le nombre restant de pion d
 
 	//Affichage de la réserve du joueur 1
 	DrawTextShaded(screen,602,202,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve J1 - ",50,50,50);
-	sprintf(text,"%d   ",J1.reserve);
+	sprintf(text,"%d      ",J1.reserve);
 	TTF_SizeText(police,text,&w,&h);
 	DrawTextShaded(screen,732,202,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,text,50,50,50);
 
 	//Affichage de la réserve du joueur 2	
 	DrawTextShaded(screen,602,652,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve J2 - ",50,50,50);
-	sprintf(text,"%d   ",J2.reserve);
+	sprintf(text,"%d      ",J2.reserve);
 	TTF_SizeText(police,text,&w,&h);
 	DrawTextShaded(screen,732,652,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,text,50,50,50);
 
@@ -1328,5 +1331,28 @@ void affiche_tour(SDL_Surface* screen){	//Affiche un carré près du pseudo du j
 		DrawRectangle(screen,850,458,35,35,0,255,255);
 	}
 	
+	SDL_Flip(screen);
+}
+
+void affiche_score(SDL_Surface* screen){	//Affiche le score des joueurs
+	
+	TTF_Font *police=NULL;
+	int w, h;
+	char text[5];
+
+	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",80);
+
+	//Affichage du score du joueur 1
+	///sprintf(text," %d ",J1.score);
+	///TTF_SizeText(police,text,&w,&h);
+	///DrawTextShaded(screen,700,80,"Polices/LibreBaskerville-Regular.ttf",80,255,255,255,text,50,50,50);
+
+	//Affichage du score du joueur 2	
+	///sprintf(text," %d ",J2.score);
+	///TTF_SizeText(police,text,&w,&h);
+	///DrawTextShaded(screen,700,530,"Polices/LibreBaskerville-Regular.ttf",80,255,255,255,text,50,50,50);
+
+	SDL_Flip(screen);
+	TTF_CloseFont(police);
 	SDL_Flip(screen);
 }

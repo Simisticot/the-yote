@@ -198,12 +198,10 @@ int main(int argc, char *argv[]){
 		Fond(screen);
 
 	//INITIALISATION
-	init_J1vsJ2(J1,J2);
 	init_plateau();
 	affiche_plateau(screen);
 	affichage_info_jeu(screen, &gameEntry);
 	affiche_reserve(screen, J1, J2);
-	TOUR=1;
 	affiche_tour(screen);
 	
 	SDL_Flip(screen);
@@ -217,12 +215,16 @@ int main(int argc, char *argv[]){
 	NUMBOX NB2; 
 	NUMBOX random;
 	COUP coup_courant;
-	int nombre_tours;
+	int nombre_tours, k;
 
-	int k; k=0; // partie en cours si k = 0, partie terminée si k = 1
+	k=0; // partie en cours si k = 0, partie terminée si k = 1
 	nombre_tours = 0;
 	J1.score = 0;
 	J2.score = 0;
+	TOUR=1;
+	init_J1vsJ2(J1,J2);
+
+
 	
 	while (k==0){
 		printf("J%d \n", TOUR);
@@ -325,6 +327,17 @@ int main(int argc, char *argv[]){
 
 		if(partie_terminee(gameEntry,nombre_tours)){
 			printf("partie_terminee %d\n", partie_terminee(gameEntry,nombre_tours));
+			if(partie_terminee(gameEntry,nombre_tours)==1){
+				printf("J1 victoire save \n");
+				AddScore(gameEntry.pseudoJ1, gameEntry.pseudoJ2, J1.score, J2.score);
+			} else if (partie_terminee(gameEntry,nombre_tours)==2){
+				printf("J2 victoire save \n");
+				AddScore(gameEntry.pseudoJ2, gameEntry.pseudoJ1, J2.score, J1.score);
+			} else if (partie_terminee(gameEntry,nombre_tours)==3){
+				printf("draw save \n");
+				AddScore(gameEntry.pseudoJ1, gameEntry.pseudoJ2, J1.score, J2.score);
+			}
+			k=1;
 		}
 
 		alterne_tour();

@@ -257,8 +257,6 @@ int main(int argc, char *argv[]){
 			SDL_Flip(screen);
 		}
 
-		alterne_tour();
-
 		if(est_coup_capture(coup_courant)){
 			do{
 				SDL_WaitEvent(&input);
@@ -273,12 +271,12 @@ int main(int argc, char *argv[]){
 				}
 			}else if(est_clic_reserve(clic1)){
 
-				if(TOUR == 1 && nombre_pions_joueur(J1) == 0){
-					prendre_reserve(1);
-					printf("prise dans reserve 1\n");
-				}else if(TOUR == 2 && nombre_pions_joueur(J2) == 0){
+				if(TOUR == 1 && nombre_pions_joueur(J2) == 0){
 					prendre_reserve(2);
 					printf("prise dans reserve 2\n");
+				}else if(TOUR == 2 && nombre_pions_joueur(J1) == 0){
+					prendre_reserve(1);
+					printf("prise dans reserve 1\n");
 				}
 			}
 		}
@@ -288,6 +286,8 @@ int main(int argc, char *argv[]){
 		}else{
 			J2.dernierCoup = coup_courant;
 		}
+
+		alterne_tour();
 		affiche_tour(screen);
 		affiche_reserve(screen, J1, J2);
 		SDL_Flip(screen);
@@ -1137,15 +1137,8 @@ int est_clic_reserve(POINT clic){
 	int bool;
 	bool=0;
 	
-	if (TOUR==1){
-		
-		if (600<clic.x && clic.x<900 && 200<clic.y && clic.y<250 && J1.reserve>0)
-		{bool=1;}
-			
-	}else{
-		
-		if (600<clic.x && clic.x<900 && 650<clic.y && clic.y<700 && J2.reserve>0)
-		{bool=1;}
+	if ((600<clic.x && clic.x<900 && 200<clic.y && clic.y<250) ||600<clic.x && clic.x<900 && 650<clic.y && clic.y<700){
+		bool = 1;
 	}
 	return bool;
 }
@@ -1244,7 +1237,9 @@ int est_coup_inverse(COUP coup1, COUP coup2){
 		coup1.depart.c == coup2.arrivee.c &&
 		coup1.depart.l == coup2.arrivee.l &&
 		coup1.arrivee.l == coup2.depart.l &&
-		coup1.arrivee.c == coup2.depart.c);
+		coup1.arrivee.c == coup2.depart.c &&
+		coup1.typeCoup == 0 &&
+		coup2.typeCoup == 0);
 }
 
 int est_coup_capture(COUP coup){

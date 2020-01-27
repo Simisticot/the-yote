@@ -99,7 +99,7 @@ void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]); //Vue
 void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int); //Vue
 SDL_Color GetPixelColor(SDL_Surface*,int,int); //Controleur
 void lastCharDel(char*); //Controleur
-int partie_terminee(GameEntry gameEntry, int nombre_tours);
+int partie_terminee(GameEntry gameEntry, int nombre_tours, int compteur_egalite);
 
 //Modèle
 void init_plateau();
@@ -137,7 +137,7 @@ void choix_seconde_capture();
 int nombre_pions_joueur(JOUEUR joueur);
 
 //Vue
-void affiche_score();
+void affiche_score(SDL_Surface* screen);
 void affiche_plateau_debug();
 void affiche_plateau(SDL_Surface* screen);
 
@@ -198,6 +198,8 @@ int main(int argc, char *argv[]){
 		Fond(screen);
 
 	//INITIALISATION
+	init_J1vsJ2(J1,J2);
+	TOUR=1;
 	init_plateau();
 	affiche_plateau(screen);
 	affichage_info_jeu(screen, &gameEntry);
@@ -216,13 +218,16 @@ int main(int argc, char *argv[]){
 	NUMBOX random;
 	COUP coup_courant;
 	int nombre_tours, k;
+	int mort_subite;
+	int compteur_egalite;
+	compteur_egalite = 0;
+	mort_subite = 0;
 
 	k=0; // partie en cours si k = 0, partie terminée si k = 1
 	nombre_tours = 0;
 	J1.score = 0;
 	J2.score = 0;
-	TOUR=1;
-	init_J1vsJ2(J1,J2);
+
 
 
 	
@@ -325,15 +330,25 @@ int main(int argc, char *argv[]){
 			J2.dernierCoup = coup_courant;
 		}
 
-		if(partie_terminee(gameEntry,nombre_tours)){
-			printf("partie_terminee %d\n", partie_terminee(gameEntry,nombre_tours));
-			if(partie_terminee(gameEntry,nombre_tours)==1){
+		if(mort_subite == 1){
+			compteur_egalite++;
+			printf("compteur_egalite = %d\n", compteur_egalite);
+		}
+
+		if(nombre_pions_joueur(J1) == 2 && nombre_pions_joueur(J2) == 2 && J1.reserve == 0 && J2.reserve == 0){
+			mort_subite = 1;
+			printf("mort subite\n");
+		}
+
+		if(partie_terminee(gameEntry,nombre_tours, compteur_egalite)){
+			printf("partie_terminee %d\n", partie_terminee(gameEntry,nombre_tours, compteur_egalite));
+			if(partie_terminee(gameEntry,nombre_tours, compteur_egalite)==1){
 				printf("J1 victoire save \n");
 				AddScore(gameEntry.pseudoJ1, gameEntry.pseudoJ2, J1.score, J2.score);
-			} else if (partie_terminee(gameEntry,nombre_tours)==2){
+			} else if (partie_terminee(gameEntry,nombre_tours, compteur_egalite)==2){
 				printf("J2 victoire save \n");
 				AddScore(gameEntry.pseudoJ2, gameEntry.pseudoJ1, J2.score, J1.score);
-			} else if (partie_terminee(gameEntry,nombre_tours)==3){
+			} else if (partie_terminee(gameEntry,nombre_tours, compteur_egalite)==3){
 				printf("draw save \n");
 				AddScore(gameEntry.pseudoJ1, gameEntry.pseudoJ2, J1.score, J2.score);
 			}
@@ -345,6 +360,7 @@ int main(int argc, char *argv[]){
 		nombre_tours++;
 		printf("tour n°%d score J1 = %d Score J2 = %d\n",nombre_tours,J1.score,J2.score);
 		affiche_reserve(screen, J1, J2);
+		affiche_score(screen);
 		SDL_Flip(screen);
 		printf("J1 : %d pions\n", nombre_pions_joueur(J1));
 		printf("J2 : %d pions\n", nombre_pions_joueur(J2));
@@ -775,7 +791,7 @@ int Jouer(SDL_Surface* screen, int choix, GameEntry* gameEntry){ //Page Jouer et
 						lastCharDel(gameEntry->pseudoJ1); //Efface la fin du pseudo
 					} else if(letter[0]!=' ' && strlen(gameEntry->pseudoJ1)<10){ //Si appuyé sur une touche valide du clavier et que l'on est à moins de 10 caractères dans le pseudo
 						strcat(gameEntry->pseudoJ1,letter); //Ajoute la touche appuyée au pseudo
-						strcat(gameEntry->pseudoJ2,"\0");
+						strcat(gameEntry->pseudoJ1,"\0");
 					}
 				}
 				if(choix==4){ //Gestion pseudo J2 - pareil à Joueur1 (choix=3 ci dessus)
@@ -1312,10 +1328,14 @@ int choix_type_coup(JOUEUR Joueur){
 	int choix;
 	srand(time(NULL));
 
-	if(nombre_pions_jouables(Joueur)>0){
+	if(nombre_pions_jouables(Joueur) > 0 && Joueur.reserve > 0){
 		choix = rand()%2;
 	}else{
-		choix = 1;
+		if (Joueur.reserve == 0){
+			choix = 0;
+		}else{
+			choix = 1;
+		}
 	}
 	return choix;
 }
@@ -1490,7 +1510,13 @@ int est_coup_valide(COUP coup){
 
 
 		reinitialiser_cases_accessibles();
+	}else{
+		if((TOUR == 1 && J1.reserve == 0) || (TOUR == 2 && J2.reserve == 0)){
+			validite = 0;
+		}
 	}
+
+
 	return validite;
 }
 
@@ -1938,6 +1964,11 @@ void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2){
 
 	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",30);
 
+	DrawRectangle(screen,602,190,180,50,50,50,50);
+	DrawRectangle(screen,602,640,180,50,50,50,50);
+ 	SDL_Flip(screen);
+
+
 	DrawTextShaded(screen,602,202,"Polices/LibreBaskerville-Regular.ttf",20,255,255,255,"Réserve J1 - ",50,50,50);
 	
 	sprintf(text,"%d ",J1.reserve);
@@ -1977,7 +2008,7 @@ void affiche_coup(COUP coup, SDL_Surface* screen){
 	}
 }
 
-int partie_terminee(GameEntry gameEntry, int nombre_tours)
+int partie_terminee(GameEntry gameEntry, int nombre_tours, int compteur_egalite)
 {
     if (nombre_tours == 0){
         return 0;
@@ -1989,6 +2020,9 @@ int partie_terminee(GameEntry gameEntry, int nombre_tours)
             if(nombre_pions_joueur(J2) == 0){
                 return 1;
             }
+            if(compteur_egalite == 10){
+        		return 3;
+        	}	
             return 0;
         }
         if(gameEntry.gameMode == 2){
@@ -1998,7 +2032,9 @@ int partie_terminee(GameEntry gameEntry, int nombre_tours)
             if(nombre_pions_joueur(J2) == 0 && J2.reserve == 0){
                 return 1;
             }
-
+            if(compteur_egalite == 10){
+        		return 3;
+        	}	
             return 0;
         }
     }

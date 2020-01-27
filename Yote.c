@@ -76,52 +76,25 @@ JOUEUR J2;			//contenant la réserve 2
 
 ////Sommaire des fonctions////
 
-//Fonction du Menu
-void WindowsNameIcon(SDL_Surface*); //Modele
-GameEntry Menu(SDL_Surface*); //Modele
-void LoadMenuText(SDL_Surface*); //Vue
-void Fond(SDL_Surface*); //Vue
-void SpecialYote(SDL_Surface*); //Vue
-int ScoreRegleCredit(SDL_Surface*,int); //Modele
-void LoadCreditText(SDL_Surface*); //Vue
-void LoadReglesText(SDL_Surface*,int); //Vue
-void LoadScoreText(SDL_Surface*); //Vue
-void AddScore(char[11],char[11],int,int); //Controleur
-int Jouer(SDL_Surface*,int,GameEntry*); //Modele
-void LoadPlayerText(SDL_Surface*); //Vue
-void LoadModeText(SDL_Surface*); //Vue
-void LoadPseudoText(SDL_Surface*,int,GameEntry*); //Vue
-char GetLetter(int); //Controleur
-void LoadRecapText(SDL_Surface*,GameEntry*); //Vue
-void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int); //Vue
-void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int); //Vue
-void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]); //Vue
-void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int); //Vue
-SDL_Color GetPixelColor(SDL_Surface*,int,int); //Controleur
-void lastCharDel(char*); //Controleur
-int partie_terminee(GameEntry gameEntry, int nombre_tours, int compteur_egalite);
-
 //Modèle
+void WindowsNameIcon(SDL_Surface*);
+GameEntry Menu(SDL_Surface*);
+int ScoreRegleCredit(SDL_Surface*,int);
+int Jouer(SDL_Surface*,int,GameEntry*);
+POINT numbox_to_point(NUMBOX NB);
+NUMBOX point_to_numbox(POINT P);
 void init_plateau();
 COUL premier_joueur();
 void placer_pion(NUMBOX position);
 void retirer_pion(NUMBOX position);
 void deplacer_pion(NUMBOX depart, NUMBOX destination);
-COUP coup_IA();
-NUMBOX pion_jouable_aleatoire(JOUEUR Joueur);
-NUMBOX pion_aleatoire(JOUEUR Joueur);
-int choix_type_coup(JOUEUR Joueur);
-NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur);
-NUMBOX case_vide_aleatoire();
-int peut_pion_bouger(NUMBOX pion, JOUEUR Joueur);
-int nombre_pions_jouables(JOUEUR Joueur);
-void alterne_tour();				//change la valeur de tour {1;2}
-void init_J1vsJ2();					//initialise les variables J1 et J2
-void prendre_reserve();				//réduit la réserve correspondante à tour
-int est_case_j(NUMBOX NB);			//vérifie si la case sélectionnée contient un pion du joueur 
-int est_case_vide(NUMBOX NB);		//vérifie si la case sélectionnée est vide
-int est_clic_reserve(POINT clic);	//vérifie si la case sélectionnée est dans la réserve correspondant à tour
-int est_clic_plateau(POINT clic);	//vérifie si la case sélectionnée est dans le plateau
+void alterne_tour();
+void init_J1vsJ2();
+void prendre_reserve();
+int est_case_j(NUMBOX NB);
+int est_case_vide(NUMBOX NB);
+int est_clic_reserve(POINT clic);
+int est_clic_plateau(POINT clic);
 int est_clic1_valide();
 int est_clic2_valide();
 int est_coup_valide(COUP coup_courant);
@@ -137,13 +110,26 @@ void choix_seconde_capture();
 int nombre_pions_joueur(JOUEUR joueur);
 
 //Vue
+void Fond(SDL_Surface*);
+void SpecialYote(SDL_Surface*);
+void LoadMenuText(SDL_Surface*);
+void LoadCreditText(SDL_Surface*);
+void LoadReglesText(SDL_Surface*,int);
+void LoadScoreText(SDL_Surface*);
+void LoadPlayerText(SDL_Surface*);
+void LoadModeText(SDL_Surface*);
+void LoadPseudoText(SDL_Surface*,int,GameEntry*);
+void LoadRecapText(SDL_Surface*,GameEntry*);
+void DrawRectangle(SDL_Surface*,int,int,int,int,int,int,int);
+void DrawTriangle(SDL_Surface*,int,int,int,int,int,int,int,int,int);
+void DrawText(SDL_Surface*,int,int,char[255],int,int,int,int,char[255]);
+void DrawTextShaded(SDL_Surface*,int,int,char[255],int,int,int,int,char[255],int,int,int);
 void affiche_score(SDL_Surface* screen);
 void affiche_plateau_debug();
 void affiche_plateau(SDL_Surface* screen);
-
 void affiche_pion(SDL_Surface* screen,NUMBOX NB);
 void efface_pion(SDL_Surface* screen,NUMBOX NB);
-void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry); //Affichage des pseudos, type de partie
+void affichage_info_jeu(SDL_Surface* screen, GameEntry* gameEntry); 
 void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2);
 void affiche_tour(SDL_Surface* screen);
 void affiche_coup(COUP coup, SDL_Surface* screen);
@@ -151,10 +137,23 @@ void affiche_coup(COUP coup, SDL_Surface* screen);
 //Controleur
 void wait_esc(SDL_Surface*);
 POINT wait_clic(SDL_Surface* screen);
-POINT numbox_to_point(NUMBOX NB);
-NUMBOX point_to_numbox(POINT P);
 void quitter(SDL_Surface* screen);
 POINT event_to_point(SDL_Event event);
+void AddScore(char[11],char[11],int,int);
+char GetLetter(int);
+SDL_Color GetPixelColor(SDL_Surface*,int,int);
+void lastCharDel(char*);
+
+//Non triés
+COUP coup_IA();
+NUMBOX pion_jouable_aleatoire(JOUEUR Joueur);
+NUMBOX pion_aleatoire(JOUEUR Joueur);
+int choix_type_coup(JOUEUR Joueur);
+NUMBOX destination_aleatoire(NUMBOX pion, JOUEUR Joueur);
+NUMBOX case_vide_aleatoire();
+int peut_pion_bouger(NUMBOX pion, JOUEUR Joueur);
+int nombre_pions_jouables(JOUEUR Joueur);
+int partie_terminee(GameEntry gameEntry, int nombre_tours, int compteur_egalite);
 
 //     MAIN     ///////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]){
@@ -707,7 +706,7 @@ void AddScore(char pseudoG[11], char pseudoP[11], int scoreG, int scoreP){ //Ajo
 	char c;
 	char chaine[40], scoreText[5];
 
-	strcat(chaine,pseudoG); //Fabrication de la string à écrire
+	strcpy(chaine,pseudoG); //Fabrication de la string à écrire
 	strcat(chaine," VS ");
 	strcat(chaine,pseudoP);
 	strcat(chaine," : ");
@@ -1963,6 +1962,10 @@ void affiche_reserve(SDL_Surface* screen, JOUEUR J1, JOUEUR J2){
 	char text[5];
 
 	police = TTF_OpenFont("Polices/LibreBaskerville-Regular.ttf",30);
+
+	DrawRectangle(screen,602,190,180,50,50,50,50);
+	DrawRectangle(screen,602,640,180,50,50,50,50);
+	SDL_Flip(screen);
 
 	DrawRectangle(screen,602,190,180,50,50,50,50);
 	DrawRectangle(screen,602,640,180,50,50,50,50);

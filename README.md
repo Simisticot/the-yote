@@ -25,7 +25,7 @@ sudo apt-get install libsdl-gfx1.2-doc
 sudo apt-get install libsdl-gfx1.2-5
 
 Voici la commande complete d'installation:
-sudo apt-get install libSLD1.2-devel libsdl1.2-dev libsdl-image1.2 libsdl-image1.2-dev libsdl-mixer1.2 libsdl-mixer1.2-dev libsdl-ttf2.0-0 libsdl-ttf2.0-dev libsdl-gfx1.2-dev libsdl-gfx1.2-doc libsdl-gfx1.2-5
+sudo apt-get install libsdl1.2-dev libsdl-image1.2 libsdl-image1.2-dev libsdl-mixer1.2 libsdl-mixer1.2-dev libsdl-ttf2.0-0 libsdl-ttf2.0-dev libsdl-gfx1.2-dev libsdl-gfx1.2-doc libsdl-gfx1.2-5
 
 ////////////////////////////////////////
 

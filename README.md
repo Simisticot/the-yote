@@ -1,5 +1,5 @@
 # the-yot-
-Le fameux jeu avec des caillous
+Jeux de société sénégalais implémenté en c avec SDL.
 
 ////////////////////////////////////////
 
